@@ -7,13 +7,13 @@ import html
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 OUT_DIR = Path(os.environ.get("OUT_DIR", "public"))
 ITEMS_PATH = OUT_DIR / "items.json"
-JST = ZoneInfo("Asia/Tokyo")
+# UTC+9（zoneinfo/tzdata に依存しない — CI でも安定）
+JST = timezone(timedelta(hours=9))
 
 
 def format_jst(iso_utc: str) -> str:
