@@ -104,7 +104,7 @@ def main() -> int:
   <div class="compare" role="region" aria-label="JAL と ANA の対比">
     <section class="col col-jal" aria-labelledby="h-jal">
       <h2 id="h-jal" class="col-head">JAL・グループ</h2>
-      <p class="col-sub">日本航空 / ZIPAIR など</p>
+      <p class="col-sub">日本航空 / ZIPAIR / JTA・RAC・JAC など</p>
       <div class="col-body">{blocks_j}</div>
     </section>
     <section class="col col-ana" aria-labelledby="h-ana">
