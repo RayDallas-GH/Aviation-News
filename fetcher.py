@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import html as html_module
 import json
 import os
+import re
 import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -51,6 +53,15 @@ def entry_summary(entry: Any) -> str:
     )
 
 
+def strip_html(text: str) -> str:
+    """RSS 要約に混ざる <input> 等のタグを除き、表示用の短文にする。"""
+    if not text:
+        return ""
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = html_module.unescape(text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def matches_keywords(haystack: str, keywords: list[str]) -> bool:
     if not haystack or not keywords:
         return False
@@ -77,16 +88,18 @@ def fetch_feed(url: str, source_id: str, source_name: str, keywords: list[str]) 
         link = getattr(entry, "link", "") or ""
         if not link:
             continue
-        summary = entry_summary(entry)
-        combined = f"{title}\n{summary}"
+        summary_raw = entry_summary(entry)
+        title_clean = strip_html(title)
+        summary_clean = strip_html(summary_raw)
+        combined = f"{title_clean}\n{summary_clean}"
         if not matches_keywords(combined, keywords):
             continue
         out.append(
             Item(
-                title=title.strip(),
+                title=title_clean or title.strip(),
                 link=link.strip(),
                 published=entry_published_iso(entry),
-                summary=summary.strip(),
+                summary=summary_clean,
                 source_id=source_id,
                 source_name=source_name,
             )
