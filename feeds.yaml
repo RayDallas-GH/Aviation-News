@@ -1,18 +1,22 @@
-# MVP: Aviation Wire の RSS のみ。JAL/ANA 関連記事はキーワードでフィルタ。
-# 後から feeds に行を足して公式ソース等を追加可能。
+# MVP: Aviation Wire の RSS のみ。後から feeds に行を足して公式ソース等を追加可能。
 
 feeds:
   - id: aviationwire
     name: Aviation Wire
     url: https://www.aviationwire.jp/feed/
 
-# タイトルまたは要約のいずれかに含まれたら掲載（部分一致）
-keywords:
-  - JAL
-  - 日本航空
-  - ANA
-  - 全日空
-  - 全日本空輸
-  - ANAホールディングス
-  - ZIPAIR
-  - ジップエア
+# いずれかのグループにマッチしたら掲載。表示は JAL / ANA で2カラム対比。
+keyword_groups:
+  jal:
+    - JAL
+    - 日本航空
+    - ZIPAIR
+    - ジップエア
+  ana:
+    - ANA
+    - 全日空
+    - 全日本空輸
+    - ANAホールディングス
+
+# 互換: keyword_groups が無い場合のみ使われる（通常は不要）
+# keywords: []

@@ -28,11 +28,33 @@ class Item:
     summary: str
     source_id: str
     source_name: str
+    groups: list[str]  # "jal" / "ana"（表示用の対比）
 
 
 def load_config() -> dict[str, Any]:
     with CONFIG_PATH.open(encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def resolve_keyword_groups(cfg: dict[str, Any]) -> dict[str, list[str]]:
+    g = cfg.get("keyword_groups")
+    if isinstance(g, dict) and g:
+        return {str(k): list(v) for k, v in g.items()}
+    legacy = cfg.get("keywords") or []
+    if legacy:
+        return {"jal": list(legacy), "ana": list(legacy)}
+    return {}
+
+
+def union_keywords(keyword_groups: dict[str, list[str]]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for kws in keyword_groups.values():
+        for kw in kws:
+            if kw and kw not in seen:
+                seen.add(kw)
+                out.append(kw)
+    return out
 
 
 def entry_published_iso(entry: Any) -> str:
@@ -75,7 +97,23 @@ def matches_keywords(haystack: str, keywords: list[str]) -> bool:
     return False
 
 
-def fetch_feed(url: str, source_id: str, source_name: str, keywords: list[str]) -> list[Item]:
+def classify_groups(
+    haystack: str, keyword_groups: dict[str, list[str]]
+) -> list[str]:
+    out: list[str] = []
+    for name, kws in sorted(keyword_groups.items()):
+        if matches_keywords(haystack, kws):
+            out.append(name)
+    return out
+
+
+def fetch_feed(
+    url: str,
+    source_id: str,
+    source_name: str,
+    keyword_groups: dict[str, list[str]],
+    union_kws: list[str],
+) -> list[Item]:
     parsed = feedparser.parse(url)
     if getattr(parsed, "bozo", False) and not parsed.entries:
         print(
@@ -92,7 +130,10 @@ def fetch_feed(url: str, source_id: str, source_name: str, keywords: list[str]) 
         title_clean = strip_html(title)
         summary_clean = strip_html(summary_raw)
         combined = f"{title_clean}\n{summary_clean}"
-        if not matches_keywords(combined, keywords):
+        if not matches_keywords(combined, union_kws):
+            continue
+        groups = classify_groups(combined, keyword_groups)
+        if not groups:
             continue
         out.append(
             Item(
@@ -102,6 +143,7 @@ def fetch_feed(url: str, source_id: str, source_name: str, keywords: list[str]) 
                 summary=summary_clean,
                 source_id=source_id,
                 source_name=source_name,
+                groups=groups,
             )
         )
     return out
@@ -120,7 +162,11 @@ def dedupe_by_link(items: list[Item]) -> list[Item]:
 
 def main() -> int:
     cfg = load_config()
-    keywords: list[str] = list(cfg.get("keywords") or [])
+    keyword_groups = resolve_keyword_groups(cfg)
+    if not keyword_groups:
+        print("feeds.yaml に keyword_groups（または keywords）が必要です。", file=sys.stderr)
+        return 1
+    union_kws = union_keywords(keyword_groups)
     feeds = cfg.get("feeds") or []
 
     all_items: list[Item] = []
@@ -131,7 +177,9 @@ def main() -> int:
         sid = fd.get("id", "unknown")
         sname = fd.get("name", sid)
         try:
-            all_items.extend(fetch_feed(url, sid, sname, keywords))
+            all_items.extend(
+                fetch_feed(url, sid, sname, keyword_groups, union_kws)
+            )
         except Exception as e:
             print(f"Error fetching {url}: {e}", file=sys.stderr)
             return 1

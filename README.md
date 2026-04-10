@@ -27,4 +27,4 @@ python fetcher.py && python renderer.py
 
 3. ワークフローが成功すると、上記の GitHub Pages URL に公開されます（初回は数分かかることがあります）。
 
-キーワードは `feeds.yaml` の `keywords` を編集してください。
+キーワードは `feeds.yaml` の **`keyword_groups`**（`jal` / `ana`）を編集してください。レポートは **左: JAL・グループ、右: ANA・グループ** の2カラム表示です。両方に当てはまる記事は上段「両社・グループに関連」に出ます。
