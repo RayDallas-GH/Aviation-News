@@ -18,8 +18,13 @@ python fetcher.py && python renderer.py
 
 ## GitHub Pages
 
-1. リポジトリを GitHub に push する。
-2. **Settings → Pages → Build and deployment → Source** を **GitHub Actions** に設定する。
-3. **Actions** タブでワークフローが成功すると、上記の GitHub Pages URL に公開されます（初回は数分かかることがあります）。
+1. **Settings → Pages → Build and deployment → Source** を **GitHub Actions** にする（**先にこれを有効にしないとデプロイが失敗**します）。
+2. コードを `main` に push する。
+
+または
+
+1. 先に push した場合は、上記の Pages 設定を **GitHub Actions** にしたうえで、**Actions** から **Daily aviation report** を **Re-run** する。
+
+3. ワークフローが成功すると、上記の GitHub Pages URL に公開されます（初回は数分かかることがあります）。
 
 キーワードは `feeds.yaml` の `keywords` を編集してください。
