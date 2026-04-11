@@ -194,6 +194,7 @@ def main() -> int:
 """
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    (OUT_DIR / ".nojekyll").write_text("", encoding="utf-8")
     index_path = OUT_DIR / "index.html"
     index_path.write_text(html_doc, encoding="utf-8")
     print(f"Wrote {index_path}")
