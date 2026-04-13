@@ -19,6 +19,9 @@ ITEMS_PATH = OUT_DIR / "items.json"
 DEALS_SRC = REPO_ROOT / "deals.json"
 JST = timezone(timedelta(hours=9))
 
+# 那覇お得情報見出し「那覇発着 … お得情報」の間。絵文字の例: "🛫" 飛行機 / "🏝️" 島 / "✈️"
+DEALS_SECTION_MARK = "\U0001f3dd\U0000fe0f"  # 🏝️ 島
+
 CAT_LABELS: dict[str, str] = {
     "route": "路線",
     "finance": "財務",
@@ -196,7 +199,6 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
             sale_html = f'<span class="deal-sale">{html.escape(str(sale))}</span>'
         else:
             sale_html = '<span class="deal-sale deal-sale--muted">現在セール設定なし</span>'
-        route = html.escape(str(d.get("route") or "—"))
         end = d.get("end_date") or ""
         end_html = (
             f'<span class="mono">〜 {html.escape(str(end))}</span>'
@@ -208,13 +210,12 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
   <td class="deal-airline"><span class="deal-dot" style="background:{dot}"></span>{airline}</td>
   <td class="deal-status">{status_html}</td>
   <td class="deal-name">{sale_html}</td>
-  <td class="deal-route mono">{route}</td>
   <td class="deal-end">{end_html}</td>
 </tr>"""
         )
     if not rows:
         rows.append(
-            '<tr><td colspan="5" class="deal-empty">deals.json に行を追加すると表示されます。</td></tr>'
+            '<tr><td colspan="4" class="deal-empty">deals.json に行を追加すると表示されます。</td></tr>'
         )
     return "\n".join(rows)
 
@@ -273,6 +274,12 @@ def main() -> int:
     empty_main = ""
     if not items:
         empty_main = '<p class="page-empty">該当する記事はありませんでした（feeds.yaml のキーワードを調整してください）。</p>'
+
+    deals_heading_mark = (
+        f'<span class="section-label__mark" aria-hidden="true">'
+        f"{html.escape(DEALS_SECTION_MARK)}"
+        f"</span>"
+    )
 
     html_doc = f"""<!DOCTYPE html>
 <html lang="ja">
@@ -424,8 +431,8 @@ def main() -> int:
       letter-spacing: 0.04em;
       margin: 0 0 0.35rem 0;
     }}
-    .brand-avi {{ color: var(--sky-deep); }}
-    .brand-news {{ color: var(--link-accent); }}
+    .brand-avi {{ color: var(--link-accent); }}
+    .brand-news {{ color: var(--sky-deep); }}
     .header-meta {{
       display: flex;
       flex-wrap: wrap;
@@ -485,6 +492,15 @@ def main() -> int:
       color: var(--color-muted);
       margin: 0 0 0.5rem 0;
       line-height: 1.25;
+    }}
+    .section-label__mark {{
+      display: inline-block;
+      margin: 0 0.12em;
+      line-height: 1;
+      vertical-align: -0.06em;
+      font-size: 0.92em;
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+      color: var(--link-accent);
     }}
     .grid-news {{
       display: grid;
@@ -652,8 +668,7 @@ def main() -> int:
     }}
     .deal-status {{ width: 96px; }}
     .deal-name {{ width: auto; }}
-    .deal-route {{ width: 160px; font-size: 1rem; }}
-    .deal-end {{ width: 112px; font-size: 1rem; }}
+    .deal-end {{ width: 120px; font-size: 1rem; }}
     .deal-badge {{
       display: inline-block;
       font-size: 0.75rem;
@@ -709,14 +724,13 @@ def main() -> int:
         {col_oth}
       </div>
       <section class="deals-wrap" aria-labelledby="h-deals">
-        <p class="section-label" id="h-deals">那覇発着 · お得情報</p>
+        <p class="section-label" id="h-deals">那覇発着 {deals_heading_mark} お得情報</p>
         <table class="deals-table">
           <thead>
             <tr>
               <th>エアライン</th>
               <th>ステータス</th>
               <th>セール名</th>
-              <th>路線</th>
               <th>終了日</th>
             </tr>
           </thead>

@@ -1,11 +1,11 @@
 {
+  "_readme": "手動メンテ用。公式運賃・セールは各社サイトで必ず確認してください。名称に「（例）」がある行はダミーです。",
   "deals": [
     {
       "airline": "JAL",
       "dot": "#E24B4A",
       "status": "active",
       "sale_name": "国内線セール（例）",
-      "route": "OKA → HND",
       "end_date": "04/30"
     },
     {
@@ -13,7 +13,6 @@
       "dot": "#378ADD",
       "status": "none",
       "sale_name": "",
-      "route": "OKA → HND",
       "end_date": ""
     },
     {
@@ -21,7 +20,6 @@
       "dot": "#1D9E75",
       "status": "active",
       "sale_name": "スーパーセール（例）",
-      "route": "OKA → NGO",
       "end_date": "05/12"
     },
     {
@@ -29,7 +27,6 @@
       "dot": "#534AB7",
       "status": "none",
       "sale_name": "",
-      "route": "OKA → HND",
       "end_date": ""
     },
     {
@@ -37,7 +34,6 @@
       "dot": "#E05A7A",
       "status": "active",
       "sale_name": "ピーチポイント2倍（例）",
-      "route": "OKA → KIX",
       "end_date": "04/25"
     },
     {
@@ -45,7 +41,6 @@
       "dot": "#EF9F27",
       "status": "none",
       "sale_name": "",
-      "route": "OKA → NRT",
       "end_date": ""
     }
   ]

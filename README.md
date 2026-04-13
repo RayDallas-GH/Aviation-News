@@ -23,7 +23,7 @@ python fetcher.py && python renderer.py
 - **バッジ**: `feeds.yaml` の **`breaking_keywords`** に一致すると **BREAKING**（列内で先頭付近にソート）。**`category_keywords`** で路線・財務・機材・国際線・その他を付与。
 - **カテゴリフィルター**: 静的 HTML のため、ブラウザ上のスクリプトで `.news-row` の表示を切り替えます（「全カテゴリ」以外では、該当カテゴリが付いていない行は隠れます）。
 - **自動更新 5分**: `index.html` に `<meta http-equiv="refresh" content="300">` があり、5分ごとにページを再読み込みします。表示内容そのものは **GitHub Actions のビルド結果** までしか更新されません（再読込で取得できるのは直近デプロイ済みの静的ファイルです）。
-- **下段**: 那覇発着のお得情報テーブル。データはリポジトリ直下の **`deals.json`**（手動メンテ想定）。`renderer.py` がビルド時に `OUT_DIR/deals.json` へコピーします。
+- **下段**: 那覇発着のお得情報テーブル。データはリポジトリ直下の **`deals.json`**（手動メンテ想定）。`renderer.py` がビルド時に `OUT_DIR/deals.json` へコピーします。見出し中黒の代わりに **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️ の絵文字）を表示します。飛行機に戻す場合は `renderer.py` 内の定数を `"🛫"` などに変更してください。
 
 ## `feeds.yaml`
 
@@ -34,7 +34,7 @@ python fetcher.py && python renderer.py
 
 ## `deals.json`
 
-ルートの `deals.json` の `deals` 配列に、エアライン名・ドット色・`status`（`active` / `none`）・セール名・路線・終了日（`MM/DD` 表記の文字列）を並べます。ファイルが無い場合でもビルドは成功し、テーブルに案内文が出ます。
+ルートの `deals.json` の `deals` 配列に、エアライン名・ドット色・`status`（`active` / `none`）・セール名・終了日（`MM/DD` 表記の文字列）を並べます。**掲載内容は自動取得せず、正確性は編集者の確認に依存します。** ファイルが無い場合でもビルドは成功し、テーブルに案内文が出ます。
 
 ## GitHub Pages
 
