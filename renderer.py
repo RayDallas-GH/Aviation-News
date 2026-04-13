@@ -250,7 +250,7 @@ def main() -> int:
     col_ana = render_column(
         "ana",
         "ANAグループ",
-        "ANA / ANAウィングス / Peach / Air Japan / AIRDO / ソラシド / スターフライヤー",
+        "ANA / ANAウィングス / Peach / AIRDO / ソラシド / スターフライヤー",
         "col-accent-ana",
         ana_items,
         show_airline_badge=False,
@@ -258,7 +258,7 @@ def main() -> int:
     col_oth = render_column(
         "oth",
         "独立系・LCC",
-        "スカイマーク / FDA / IBEX / スプリングジャパン / 天草 / ORC",
+        "スカイマーク / FDA / IBEX / スプリングジャパン / 天草 / ORC / トキエア",
         "col-accent-oth",
         oth_items,
         show_airline_badge=True,

@@ -31,8 +31,6 @@ keyword_groups:
     - ANAウィングス
     - Peach
     - ピーチ
-    - Air Japan
-    - エアージャパン
     - AIRDO
     - ソラシドエア
     - ソラシド
@@ -48,6 +46,9 @@ keyword_groups:
     - 天草エアライン
     - ORC
     - オリエンタルエアブリッジ
+    - トキエア
+    - TOKI AIR
+    - Toki Air
 
 # タイトル・要約にマッチしたら Item.categories に追加（複数可）。UI のカテゴリフィルターとバッジに対応。
 category_keywords:
