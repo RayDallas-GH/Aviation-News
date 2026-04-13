@@ -28,7 +28,10 @@ class Item:
     summary: str
     source_id: str
     source_name: str
-    groups: list[str]  # "jal" / "ana"（表示用の対比）
+    groups: list[str]  # "jal" / "ana" / "oth"
+    categories: list[str]  # route / finance / fleet / intl / general
+    breaking: bool
+    airline_badge: str  # 独立系カラム用。oth マッチ時、タイトルに最初に当たったキーワード
 
 
 def load_config() -> dict[str, Any]:
@@ -39,10 +42,11 @@ def load_config() -> dict[str, Any]:
 def resolve_keyword_groups(cfg: dict[str, Any]) -> dict[str, list[str]]:
     g = cfg.get("keyword_groups")
     if isinstance(g, dict) and g:
-        return {str(k): list(v) for k, v in g.items()}
+        return {str(k): [str(x) for x in v if str(x)] for k, v in g.items()}
     legacy = cfg.get("keywords") or []
     if legacy:
-        return {"jal": list(legacy), "ana": list(legacy)}
+        leg = [str(x) for x in legacy if str(x).strip()]
+        return {"jal": leg, "ana": leg}
     return {}
 
 
@@ -88,11 +92,12 @@ def matches_keywords(haystack: str, keywords: list[str]) -> bool:
     if not haystack or not keywords:
         return False
     for kw in keywords:
-        if not kw:
+        k = str(kw).strip() if kw is not None else ""
+        if not k:
             continue
-        if kw in haystack:
+        if k in haystack:
             return True
-        if kw.isascii() and kw.lower() in haystack.lower():
+        if k.isascii() and k.lower() in haystack.lower():
             return True
     return False
 
@@ -107,12 +112,69 @@ def classify_groups(
     return out
 
 
+def resolve_category_keywords(cfg: dict[str, Any]) -> dict[str, list[str]]:
+    raw = cfg.get("category_keywords")
+    if not isinstance(raw, dict) or not raw:
+        return {}
+    return {str(k): [str(x) for x in v if str(x)] for k, v in raw.items() if v}
+
+
+def resolve_breaking_keywords(cfg: dict[str, Any]) -> list[str]:
+    raw = cfg.get("breaking_keywords")
+    if isinstance(raw, list) and raw:
+        return [str(x) for x in raw if str(x).strip()]
+    return ["BREAKING", "速報", "緊急"]
+
+
+def classify_categories(
+    haystack: str, category_keywords: dict[str, list[str]]
+) -> list[str]:
+    """表示順を安定させるため、route → finance → fleet → intl → general の順で採用。"""
+    order = ["route", "finance", "fleet", "intl", "general"]
+    seen: set[str] = set()
+    out: list[str] = []
+    for cat in order:
+        kws = category_keywords.get(cat) or []
+        if cat in seen:
+            continue
+        if matches_keywords(haystack, kws):
+            seen.add(cat)
+            out.append(cat)
+    for name, kws in sorted(category_keywords.items()):
+        if name in order or name in seen:
+            continue
+        if matches_keywords(haystack, kws):
+            seen.add(name)
+            out.append(name)
+    return out
+
+
+def detect_breaking(haystack: str, breaking_keywords: list[str]) -> bool:
+    return matches_keywords(haystack, breaking_keywords)
+
+
+def first_group_keyword_in_title(title: str, kws: list[str]) -> str:
+    """キーワードリストの順で、タイトルに含まれる最初の語を返す（社名バッジ用）。"""
+    if not title:
+        return ""
+    for kw in kws:
+        if not kw:
+            continue
+        if kw in title:
+            return kw
+        if kw.isascii() and kw.lower() in title.lower():
+            return kw
+    return ""
+
+
 def fetch_feed(
     url: str,
     source_id: str,
     source_name: str,
     keyword_groups: dict[str, list[str]],
     union_kws: list[str],
+    category_keywords: dict[str, list[str]],
+    breaking_keywords: list[str],
 ) -> list[Item]:
     parsed = feedparser.parse(url)
     if getattr(parsed, "bozo", False) and not parsed.entries:
@@ -135,6 +197,14 @@ def fetch_feed(
         groups = classify_groups(combined, keyword_groups)
         if not groups:
             continue
+        cats = classify_categories(combined, category_keywords)
+        brk = detect_breaking(combined, breaking_keywords)
+        oth_kws = keyword_groups.get("oth") or []
+        badge = (
+            first_group_keyword_in_title(title_clean, oth_kws)
+            if "oth" in groups
+            else ""
+        )
         out.append(
             Item(
                 title=title_clean or title.strip(),
@@ -144,6 +214,9 @@ def fetch_feed(
                 source_id=source_id,
                 source_name=source_name,
                 groups=groups,
+                categories=cats,
+                breaking=brk,
+                airline_badge=badge,
             )
         )
     return out
@@ -167,6 +240,8 @@ def main() -> int:
         print("feeds.yaml に keyword_groups（または keywords）が必要です。", file=sys.stderr)
         return 1
     union_kws = union_keywords(keyword_groups)
+    category_keywords = resolve_category_keywords(cfg)
+    breaking_keywords = resolve_breaking_keywords(cfg)
     feeds = cfg.get("feeds") or []
 
     all_items: list[Item] = []
@@ -178,7 +253,15 @@ def main() -> int:
         sname = fd.get("name", sid)
         try:
             all_items.extend(
-                fetch_feed(url, sid, sname, keyword_groups, union_kws)
+                fetch_feed(
+                    url,
+                    sid,
+                    sname,
+                    keyword_groups,
+                    union_kws,
+                    category_keywords,
+                    breaking_keywords,
+                )
             )
         except Exception as e:
             print(f"Error fetching {url}: {e}", file=sys.stderr)

@@ -5,7 +5,7 @@ feeds:
     name: Aviation Wire
     url: https://www.aviationwire.jp/feed/
 
-# いずれかのグループにマッチしたら掲載。表示は JAL / ANA で2カラム対比。
+# いずれかのグループにマッチしたら掲載。ダッシュボードは JAL / ANA / 独立系・LCC の3カラム。
 keyword_groups:
   jal:
     - JAL
@@ -18,11 +18,86 @@ keyword_groups:
     - 琉球エアコミューター
     - JAC
     - 日本エアコミューター
+    - J-AIR
+    - JALエクスプレス
+    - ジェットスター
+    - ジェットスタージャパン
   ana:
     - ANA
     - 全日空
     - 全日本空輸
     - ANAホールディングス
+    - ANAウイングス
+    - ANAウィングス
+    - Peach
+    - ピーチ
+    - Air Japan
+    - エアージャパン
+    - AIRDO
+    - ソラシドエア
+    - ソラシド
+    - スターフライヤー
+  oth:
+    - スカイマーク
+    - FDA
+    - フジドリームエアラインズ
+    - IBEX
+    - アイベックスエアラインズ
+    - IBEXエアラインズ
+    - スプリングジャパン
+    - 天草エアライン
+    - ORC
+    - オリエンタルエアブリッジ
+
+# タイトル・要約にマッチしたら Item.categories に追加（複数可）。UI のカテゴリフィルターとバッジに対応。
+category_keywords:
+  route:
+    - 路線
+    - 就航
+    - 運航
+    - 増便
+    - 減便
+    - ダイヤ
+    - 新規
+    - 撤退
+  finance:
+    - 決算
+    - 業績
+    - 赤字
+    - 黒字
+    - 損益
+    - 連結
+    - 売上
+  fleet:
+    - 機材
+    - 787
+    - 777
+    - 737
+    - A320
+    - A350
+    - 機体
+    - 導入
+    - 受領
+  intl:
+    - 国際線
+    - 国際
+    - 海外
+    - グアム
+    - ハワイ
+  general:
+    - 人事
+    - 異動
+    - 環境
+    - SAF
+    - サービス
+    - 採用
+    - CSR
+
+# タイトル・要約にマッチしたら BREAKING バッジ＋列内先頭ソート。
+breaking_keywords:
+  - BREAKING
+  - 速報
+  - 緊急
 
 # 互換: keyword_groups が無い場合のみ使われる（通常は不要）
 # keywords: []
