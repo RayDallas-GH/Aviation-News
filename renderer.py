@@ -117,13 +117,19 @@ def badge_category(cat: str) -> str:
     return f'<span class="badge badge--cat-{safe}">{label}</span>'
 
 
-def badge_airline(name: str) -> str:
-    if not name:
+def company_badge_html(column: str, it: dict) -> str:
+    """列に応じた社名バッジ。旧 items.json の airline_badge は oth のみフォールバック。"""
+    col = column if column in ("jal", "ana", "oth") else "oth"
+    key = f"badge_{col}"
+    txt = it.get(key) or ""
+    if not txt and col == "oth":
+        txt = it.get("airline_badge") or ""
+    if not txt:
         return ""
-    return f'<span class="badge badge--airline">{html.escape(name)}</span>'
+    return f'<span class="badge badge--company-{col}">{html.escape(str(txt))}</span>'
 
 
-def render_news_row(it: dict, *, show_airline_badge: bool) -> str:
+def render_news_row(it: dict, *, column: str) -> str:
     title = html.escape(it.get("title") or "(無題)")
     raw_link = it.get("link") or "#"
     link_esc = html.escape(raw_link, quote=True)
@@ -138,9 +144,9 @@ def render_news_row(it: dict, *, show_airline_badge: bool) -> str:
         badges.append(badge_breaking())
     for c in cats:
         badges.append(badge_category(str(c)))
-    ab = it.get("airline_badge") or ""
-    if show_airline_badge and ab:
-        badges.append(badge_airline(str(ab)))
+    cb = company_badge_html(column, it)
+    if cb:
+        badges.append(cb)
     badges_html = "".join(badges) if badges else ""
     row_cls = "news-row"
     if brk:
@@ -163,15 +169,11 @@ def render_column(
     subtitle: str,
     accent_class: str,
     items: list[dict],
-    *,
-    show_airline_badge: bool,
 ) -> str:
     n = len(items)
     count_html = f'<span class="col-count mono">{n}</span>'
     if items:
-        body = "\n".join(
-            render_news_row(it, show_airline_badge=show_airline_badge) for it in items
-        )
+        body = "\n".join(render_news_row(it, column=col_id) for it in items)
     else:
         body = '<p class="col-empty">該当なし</p>'
     return f"""<section class="col {accent_class}" aria-labelledby="h-{col_id}">
@@ -255,7 +257,6 @@ def main() -> int:
         "JAL / JTA / JAC / J-AIR / RAC / ZIPAIR / ジェットスタージャパン",
         "col-accent-jal",
         jal_items,
-        show_airline_badge=False,
     )
     col_ana = render_column(
         "ana",
@@ -263,7 +264,6 @@ def main() -> int:
         "ANA / ANAウィングス / Peach / AIRDO / ソラシド / スターフライヤー",
         "col-accent-ana",
         ana_items,
-        show_airline_badge=False,
     )
     col_oth = render_column(
         "oth",
@@ -271,7 +271,6 @@ def main() -> int:
         "スカイマーク / FDA / IBEX / スプリングジャパン / 天草 / ORC / トキエア",
         "col-accent-oth",
         oth_items,
-        show_airline_badge=True,
     )
 
     deals = load_deals()
@@ -607,6 +606,18 @@ def main() -> int:
     .badge--cat-general {{ background: var(--badge-general-bg); color: var(--badge-general-fg); }}
     .badge--cat-misc {{ background: var(--badge-general-bg); color: var(--badge-general-fg); }}
     .badge--airline {{ background: var(--badge-airline-bg); color: var(--badge-airline-fg); }}
+    .badge--company-jal {{
+      background: var(--jal-bg);
+      color: var(--jal-text);
+    }}
+    .badge--company-ana {{
+      background: var(--ana-bg);
+      color: var(--ana-text);
+    }}
+    .badge--company-oth {{
+      background: var(--badge-airline-bg);
+      color: var(--badge-airline-fg);
+    }}
     .news-row__time {{
       flex: 0 0 auto;
       font-size: 0.875rem;
@@ -669,12 +680,17 @@ def main() -> int:
       font-weight: 500;
     }}
     .deal-airline-link {{
-      color: inherit;
+      color: var(--link-accent);
       text-decoration: none;
     }}
     .deal-airline-link:hover {{
-      color: var(--link-accent);
       text-decoration: underline;
+      filter: brightness(0.92);
+    }}
+    @media (prefers-color-scheme: dark) {{
+      .deal-airline-link:hover {{
+        filter: brightness(1.12);
+      }}
     }}
     .deal-dot {{
       display: inline-block;

@@ -31,7 +31,9 @@ class Item:
     groups: list[str]  # "jal" / "ana" / "oth"
     categories: list[str]  # route / finance / fleet / intl / general
     breaking: bool
-    airline_badge: str  # 独立系カラム用。oth マッチ時、タイトルに最初に当たったキーワード
+    badge_jal: str  # タイトルに最初に当たった jal キーワード（該当列のみ表示）
+    badge_ana: str
+    badge_oth: str
 
 
 def load_config() -> dict[str, Any]:
@@ -167,6 +169,19 @@ def first_group_keyword_in_title(title: str, kws: list[str]) -> str:
     return ""
 
 
+def first_group_keyword_for_badge(
+    title: str, summary: str, kws: list[str]
+) -> str:
+    """社名バッジ用。タイトルに無ければ要約の先頭付近も検索。"""
+    t = first_group_keyword_in_title(title, kws)
+    if t:
+        return t
+    if summary:
+        head = summary[:400]
+        return first_group_keyword_in_title(head, kws)
+    return ""
+
+
 def fetch_feed(
     url: str,
     source_id: str,
@@ -199,9 +214,21 @@ def fetch_feed(
             continue
         cats = classify_categories(combined, category_keywords)
         brk = detect_breaking(combined, breaking_keywords)
+        jal_kws = keyword_groups.get("jal") or []
+        ana_kws = keyword_groups.get("ana") or []
         oth_kws = keyword_groups.get("oth") or []
-        badge = (
-            first_group_keyword_in_title(title_clean, oth_kws)
+        bj = (
+            first_group_keyword_for_badge(title_clean, summary_clean, jal_kws)
+            if "jal" in groups
+            else ""
+        )
+        ba = (
+            first_group_keyword_for_badge(title_clean, summary_clean, ana_kws)
+            if "ana" in groups
+            else ""
+        )
+        bo = (
+            first_group_keyword_for_badge(title_clean, summary_clean, oth_kws)
             if "oth" in groups
             else ""
         )
@@ -216,7 +243,9 @@ def fetch_feed(
                 groups=groups,
                 categories=cats,
                 breaking=brk,
-                airline_badge=badge,
+                badge_jal=bj,
+                badge_ana=ba,
+                badge_oth=bo,
             )
         )
     return out
