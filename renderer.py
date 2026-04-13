@@ -187,7 +187,17 @@ def render_column(
 def render_deals_rows(deals: list[dict[str, Any]]) -> str:
     rows: list[str] = []
     for d in deals:
-        airline = html.escape(str(d.get("airline") or ""))
+        airline_name = str(d.get("airline") or "")
+        airline_esc = html.escape(airline_name)
+        url_raw = str(d.get("airline_url") or "").strip()
+        if url_raw.startswith(("https://", "http://")):
+            url_esc = html.escape(url_raw, quote=True)
+            airline_cell = (
+                f'<a class="deal-airline-link" href="{url_esc}" '
+                f'target="_blank" rel="noopener noreferrer">{airline_esc}</a>'
+            )
+        else:
+            airline_cell = airline_esc
         dot = html.escape(str(d.get("dot") or "#888"))
         st = str(d.get("status") or "none")
         if st == "active":
@@ -207,7 +217,7 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
         )
         rows.append(
             f"""<tr>
-  <td class="deal-airline"><span class="deal-dot" style="background:{dot}"></span>{airline}</td>
+  <td class="deal-airline"><span class="deal-dot" style="background:{dot}"></span>{airline_cell}</td>
   <td class="deal-status">{status_html}</td>
   <td class="deal-name">{sale_html}</td>
   <td class="deal-end">{end_html}</td>
@@ -657,6 +667,14 @@ def main() -> int:
     .deal-airline {{
       width: 148px;
       font-weight: 500;
+    }}
+    .deal-airline-link {{
+      color: inherit;
+      text-decoration: none;
+    }}
+    .deal-airline-link:hover {{
+      color: var(--link-accent);
+      text-decoration: underline;
     }}
     .deal-dot {{
       display: inline-block;
