@@ -286,20 +286,23 @@ def main() -> int:
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
   <style>
     :root {{
-      --color-bg: #f4f4f1;
-      --color-surface: #ffffff;
-      --color-text: #1a1a1a;
-      --color-muted: #5c5c58;
-      --color-border: #e3e0d8;
+      --color-bg: #e9f3fc;
+      --color-bg-mid: #f0f7fd;
+      --color-surface: rgba(255, 255, 255, 0.92);
+      --color-text: #0f2744;
+      --color-muted: #5a6f85;
+      --color-border: #c5d9eb;
+      --link-accent: #0b6cb5;
+      --sky-deep: #0a3d62;
       --jal-accent: #E24B4A;
-      --jal-bg: #FCEBEB;
-      --jal-text: #791F1F;
-      --ana-accent: #378ADD;
-      --ana-bg: #E6F1FB;
-      --ana-text: #0C447C;
-      --oth-accent: #BA7517;
-      --oth-bg: #FAEEDA;
-      --oth-text: #633806;
+      --jal-bg: #fff5f5;
+      --jal-text: #7a2222;
+      --ana-accent: #1e7cc8;
+      --ana-bg: #e3f1fc;
+      --ana-text: #0a4a7a;
+      --oth-accent: #c47a12;
+      --oth-bg: #fdf6ea;
+      --oth-text: #5c3d0c;
       --badge-breaking-bg: #E24B4A;
       --badge-breaking-fg: #ffffff;
       --badge-route-bg: #E6F1FB;
@@ -310,46 +313,49 @@ def main() -> int:
       --badge-fleet-fg: #3C3489;
       --badge-intl-bg: #FCEBEB;
       --badge-intl-fg: #791F1F;
-      --badge-general-bg: #F1EFE8;
-      --badge-general-fg: #444441;
-      --badge-airline-bg: #FAEEDA;
-      --badge-airline-fg: #633806;
+      --badge-general-bg: #e8eef5;
+      --badge-general-fg: #3d4f63;
+      --badge-airline-bg: #fdf0e0;
+      --badge-airline-fg: #5c3d0c;
       --deal-on-bg: #EAF3DE;
       --deal-on-fg: #27500A;
-      --deal-off-bg: #F1EFE8;
-      --deal-off-fg: #888780;
+      --deal-off-bg: #e8eef5;
+      --deal-off-fg: #6b7c8f;
       --font-sans: "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, system-ui, sans-serif;
       --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }}
     @media (prefers-color-scheme: dark) {{
       :root {{
-        --color-bg: #121210;
-        --color-surface: #1a1a17;
-        --color-text: #eceae4;
-        --color-muted: #a8a69e;
-        --color-border: #2e2e29;
-        --jal-bg: #2a1a1a;
-        --jal-text: #f0c8c8;
-        --ana-bg: #152535;
-        --ana-text: #c8dcf5;
-        --oth-bg: #2a2215;
+        --color-bg: #0c1929;
+        --color-bg-mid: #0f2135;
+        --color-surface: rgba(18, 36, 56, 0.94);
+        --color-text: #e8f1fa;
+        --color-muted: #8aa3b8;
+        --color-border: #2a4a6a;
+        --link-accent: #5eb0f0;
+        --sky-deep: #b8d9f5;
+        --jal-bg: #2c1818;
+        --jal-text: #f5c8c8;
+        --ana-bg: #152a40;
+        --ana-text: #b8daf5;
+        --oth-bg: #2a2318;
         --oth-text: #edd9b8;
-        --badge-route-bg: #1a2a38;
+        --badge-route-bg: #153048;
         --badge-route-fg: #b8d4f0;
-        --badge-finance-bg: #1f2a18;
+        --badge-finance-bg: #1a2e22;
         --badge-finance-fg: #c5e0a8;
-        --badge-fleet-bg: #222130;
+        --badge-fleet-bg: #222640;
         --badge-fleet-fg: #cfc8ff;
         --badge-intl-bg: #2a1818;
         --badge-intl-fg: #f0c0c0;
-        --badge-general-bg: #242320;
-        --badge-general-fg: #d6d4cc;
-        --badge-airline-bg: #2a2215;
+        --badge-general-bg: #1e2d3d;
+        --badge-general-fg: #c5d0dc;
+        --badge-airline-bg: #2a2318;
         --badge-airline-fg: #edd9b8;
-        --deal-on-bg: #1f2a18;
+        --deal-on-bg: #1a2e22;
         --deal-on-fg: #c5e0a8;
-        --deal-off-bg: #242320;
-        --deal-off-fg: #888780;
+        --deal-off-bg: #1e2d3d;
+        --deal-off-fg: #8aa3b8;
       }}
     }}
     * {{ box-sizing: border-box; }}
@@ -362,7 +368,27 @@ def main() -> int:
       font-size: 16px;
       line-height: 1.55;
       color: var(--color-text);
-      background: var(--color-bg);
+      background-color: var(--color-bg);
+      background-image: linear-gradient(
+        168deg,
+        #d4e9fb 0%,
+        var(--color-bg) 32%,
+        var(--color-bg-mid) 58%,
+        #f7fbff 100%
+      );
+      background-attachment: fixed;
+      min-height: 100vh;
+    }}
+    @media (prefers-color-scheme: dark) {{
+      body {{
+        background-image: linear-gradient(
+          168deg,
+          #071018 0%,
+          var(--color-bg) 40%,
+          var(--color-bg-mid) 70%,
+          #122a42 100%
+        );
+      }}
     }}
     .mono {{ font-family: var(--font-mono); font-weight: 500; }}
     a {{ color: inherit; }}
@@ -375,6 +401,21 @@ def main() -> int:
       border-bottom: 1px solid var(--color-border);
       padding-bottom: 0.85rem;
       margin-bottom: 1rem;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.55),
+        transparent
+      );
+      border-radius: 0 0 12px 12px;
+    }}
+    @media (prefers-color-scheme: dark) {{
+      .site-header {{
+        background: linear-gradient(
+          to bottom,
+          rgba(30, 60, 90, 0.35),
+          transparent
+        );
+      }}
     }}
     .brand {{
       font-family: var(--font-mono);
@@ -383,8 +424,8 @@ def main() -> int:
       letter-spacing: 0.04em;
       margin: 0 0 0.35rem 0;
     }}
-    .brand-avi {{ color: var(--color-text); }}
-    .brand-news {{ color: var(--jal-accent); }}
+    .brand-avi {{ color: var(--sky-deep); }}
+    .brand-news {{ color: var(--link-accent); }}
     .header-meta {{
       display: flex;
       flex-wrap: wrap;
@@ -457,9 +498,15 @@ def main() -> int:
     .col {{
       background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
       min-height: 6rem;
+      box-shadow: 0 4px 20px rgba(11, 80, 140, 0.07);
+    }}
+    @media (prefers-color-scheme: dark) {{
+      .col {{
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+      }}
     }}
     .col-accent-jal {{ border-top: 2px solid var(--jal-accent); }}
     .col-accent-ana {{ border-top: 2px solid var(--ana-accent); }}
@@ -496,9 +543,9 @@ def main() -> int:
       border-bottom: 1px solid var(--color-border);
     }}
     .news-row:last-child {{ border-bottom: none; }}
-    .news-row:hover {{ background: rgba(0,0,0,0.03); }}
+    .news-row:hover {{ background: rgba(11, 108, 181, 0.06); }}
     @media (prefers-color-scheme: dark) {{
-      .news-row:hover {{ background: rgba(255,255,255,0.04); }}
+      .news-row:hover {{ background: rgba(94, 176, 240, 0.08); }}
     }}
     .news-row--breaking {{
       background: rgba(226, 75, 74, 0.08);
@@ -546,7 +593,7 @@ def main() -> int:
     }}
     .news-row--breaking .news-row__title {{ font-size: 1.0625rem; font-weight: 500; }}
     .news-row__title a {{
-      color: var(--ana-accent);
+      color: var(--link-accent);
       text-decoration: none;
     }}
     .news-row__title a:hover {{ text-decoration: underline; }}
@@ -563,8 +610,14 @@ def main() -> int:
       border-collapse: collapse;
       background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
+      box-shadow: 0 4px 20px rgba(11, 80, 140, 0.07);
+    }}
+    @media (prefers-color-scheme: dark) {{
+      .deals-table {{
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+      }}
     }}
     .deals-table th, .deals-table td {{
       padding: 0.45rem 0.5rem;
