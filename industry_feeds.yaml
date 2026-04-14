@@ -9,8 +9,11 @@ feeds:
 # 先に評価するトラックほど優先（重複時は先勝ち）
 match_order: [aam, intl_oem, jp_oem]
 
-# 記事全体に当たったら除外（必要に応じて追加）
-exclude: []
+# 記事全体に当たったら除外（エアライン運航・路線ニュースなどメーカー列に不適切なもの）
+exclude:
+  - デルタ航空
+  - Delta Air Lines
+  - Delta Air
 
 tracks:
   jp_oem:

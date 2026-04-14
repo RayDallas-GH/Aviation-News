@@ -38,7 +38,7 @@ python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && py
 - **`feeds`**: RSS の URL（フェーズ1は Aviation Wire 1 本。行を足してソース追加）。
 - **`match_order`**: 複数トラックにキーワードが当たるときの優先順（既定 `aam` → `intl_oem` → `jp_oem`）。
 - **`tracks`**: 各トラックの `label_ja`、`include` キーワード、`per_track_limit`。
-- **`exclude`**: 除外キーワード（任意）。
+- **`exclude`**: 除外キーワード（任意）。例: **デルタ航空**はエアラインのためメーカー列対象外（`industry_fetcher` は除外一致の記事をトラックに入れない）。
 
 ## `deals_sources.yaml`（自動）
 
