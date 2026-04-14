@@ -11,10 +11,10 @@ python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 export OUT_DIR=public
-python fetcher.py && python renderer.py
+python fetcher.py && python deals_fetcher.py && python renderer.py
 ```
 
-`public/index.html` をブラウザで開いてください。
+`public/index.html` をブラウザで開いてください。お得情報だけ試す場合は `python deals_fetcher.py && python renderer.py`（`items.json` が既にある前提）でも構いません。
 
 ## ダッシュボードの内容
 
@@ -23,7 +23,7 @@ python fetcher.py && python renderer.py
 - **バッジ**: `feeds.yaml` の **`breaking_keywords`** に一致すると **BREAKING**（列内で先頭付近にソート）。**`category_keywords`** で路線・財務・機材・国際線・その他を付与。
 - **カテゴリフィルター**: 静的 HTML のため、ブラウザ上のスクリプトで `.news-row` の表示を切り替えます（「全カテゴリ」以外では、該当カテゴリが付いていない行は隠れます）。
 - **自動更新 5分**: `index.html` に `<meta http-equiv="refresh" content="300">` があり、5分ごとにページを再読み込みします。表示内容そのものは **GitHub Actions のビルド結果** までしか更新されません（再読込で取得できるのは直近デプロイ済みの静的ファイルです）。
-- **下段**: 那覇発着のお得情報テーブル。データはリポジトリ直下の **`deals.json`**（手動メンテ想定）。`renderer.py` がビルド時に `OUT_DIR/deals.json` へコピーします。見出し中黒の代わりに **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️ の絵文字）を表示します。飛行機に戻す場合は `renderer.py` 内の定数を `"🛫"` などに変更してください。
+- **下段**: 那覇発着のお得情報テーブル。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、ページのタイトル（og:title / h1 等）を **セール名**、本文から日付表現を探して **終了日（MM/DD）** と **`active` / `none`** を推定し、**`OUT_DIR/deals.json`** を書きます（ヒューリスティックのため **公式と必ず一致するとは限りません**）。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
 
 ## `feeds.yaml`
 
@@ -32,9 +32,16 @@ python fetcher.py && python renderer.py
 - **`category_keywords`**: 各記事の `categories`（表示・フィルター用）。任意省略可。
 - **`breaking_keywords`**: `breaking: true` と BREAKING バッジ。省略時は `BREAKING` / `速報` / `緊急` を使用。
 
-## `deals.json`
+## `deals_sources.yaml`（自動）
 
-ルートの `deals.json` の `deals` 配列に、エアライン名・任意の **`airline_url`**（公式サイト。指定時は名前が新しいタブで開くリンクになる）・ドット色・`status`（`active` / `none`）・セール名・終了日（`MM/DD` 表記の文字列）を並べます。**掲載内容は自動取得せず、正確性は編集者の確認に依存します。** ファイルが無い場合でもビルドは成功し、テーブルに案内文が出ます。
+- 各行: `airline`, `dot`, `airline_url`（社名リンク）, **`campaign_url`**（セール情報を読みに行く URL）。
+- **販売終了日**は「～◯月◯日（曜）23:59」「予約・販売期間：…～◯月◯日」「◯/◯（曜）09:59まで」などをヒューリスティックに解析し、**搭乗期間**の行と紛らわしい候補は落とし気味です（ページによっては未取得・誤検出があり得ます）。
+- サイトの HTML 変更でパースが外れることがあります。取得元を変える場合は `campaign_url` を公式のキャンペーン一覧などに差し替えてください。
+
+## `deals.json`（フォールバック）
+
+- **`deals_fetcher.py` を実行しない**、または **`public/deals.json` が無い** ときに `renderer.py` が読みます（手動メンテ用）。
+- フィールドは従来どおり（`airline`, `airline_url`, `dot`, `status`, `sale_name`, `end_date`）。
 
 ## GitHub Pages
 

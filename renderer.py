@@ -17,6 +17,7 @@ OUT_DIR = Path(os.environ.get("OUT_DIR", "public"))
 REPO_ROOT = Path(__file__).resolve().parent
 ITEMS_PATH = OUT_DIR / "items.json"
 DEALS_SRC = REPO_ROOT / "deals.json"
+DEALS_OUT = OUT_DIR / "deals.json"
 JST = timezone(timedelta(hours=9))
 
 # 那覇お得情報見出し「那覇発着 … お得情報」の間。絵文字の例: "🛫" 飛行機 / "🏝️" 島 / "✈️"
@@ -91,14 +92,18 @@ def count_with_group(items: list[dict], group: str) -> int:
 
 
 def load_deals() -> list[dict[str, Any]]:
-    if not DEALS_SRC.is_file():
-        return []
-    try:
-        data = json.loads(DEALS_SRC.read_text(encoding="utf-8"))
-        raw = data.get("deals")
-        return list(raw) if isinstance(raw, list) else []
-    except Exception:
-        return []
+    """deals_fetcher が書いた OUT_DIR/deals.json を優先。無ければリポジトリの deals.json。"""
+    for path in (DEALS_OUT, DEALS_SRC):
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            raw = data.get("deals")
+            if isinstance(raw, list):
+                return list(raw)
+        except Exception:
+            continue
+    return []
 
 
 def escape_attr(val: str) -> str:
@@ -227,7 +232,7 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
         )
     if not rows:
         rows.append(
-            '<tr><td colspan="4" class="deal-empty">deals.json に行を追加すると表示されます。</td></tr>'
+            '<tr><td colspan="4" class="deal-empty">deals_fetcher.py で生成するか、deals.json に行を追加してください。</td></tr>'
         )
     return "\n".join(rows)
 
@@ -276,9 +281,9 @@ def main() -> int:
     deals = load_deals()
     deals_body = render_deals_rows(deals)
 
-    if DEALS_SRC.is_file():
-        OUT_DIR.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(DEALS_SRC, OUT_DIR / "deals.json")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    if not DEALS_OUT.is_file() and DEALS_SRC.is_file():
+        shutil.copy2(DEALS_SRC, DEALS_OUT)
 
     empty_main = ""
     if not items:

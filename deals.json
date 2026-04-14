@@ -1,5 +1,5 @@
 {
-  "_readme": "各社公式のキャンペーン・運賃ページで開催期間と条件を確認のうえ更新してください。end_date は MM/DD（表示は 〜 MM/DD）。空欄は未設定または要確認。status は active=開催中 / none=なし。",
+  "_readme": "フォールバック用。CI では deals_fetcher.py が deals_sources.yaml から先に public/deals.json を生成する。fetch をオフにする場合のみ手で編集。",
   "deals": [
     {
       "airline": "JAL",
