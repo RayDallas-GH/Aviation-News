@@ -42,6 +42,15 @@ class TestFindEndMmdd(unittest.TestCase):
         now = _dt(2026, 4, 14)
         self.assertEqual(find_end_mmdd(text, now), "")
 
+    def test_jal_style_zero_zero_tilde(self) -> None:
+        text = (
+            "販売期間：2026年2月4日（水）0:00～2月8日（日）23:59\n"
+            "搭乗期間：2026年3月1日～4月30日\n"
+            "タイムセール"
+        )
+        now = _dt(2026, 4, 14)
+        self.assertEqual(find_end_mmdd(text, now), "02/08")
+
 
 class TestDecideStatus(unittest.TestCase):
     def test_solaseed_title_active(self) -> None:

@@ -102,41 +102,44 @@ def _date_in_year(year: int, mo: int, d: int) -> datetime | None:
 
 
 def _pick_best_end(candidates: list[tuple[int, int, int]], now_jst: datetime) -> str:
-    """スコア最大の候補だけを使い、未来締切は最も近い日付を優先。"""
+    """スコアの高い帯から順に見て、未来締切は最も近い日付、無ければ直近の過去締切を返す。"""
     if not candidates:
         return ""
     year = now_jst.year
-    max_sc = max(c[2] for c in candidates)
-    top = [(mo, d, sc) for mo, d, sc in candidates if sc == max_sc]
     today = now_jst.date()
-
-    future: list[tuple[int, int]] = []
-    past: list[tuple[int, int]] = []
-    for mo, d, _ in top:
-        dt = _date_in_year(year, mo, d)
-        if not dt:
+    max_sc = max(c[2] for c in candidates)
+    # 最高スコア帯だけだと日付が取れないサイトがあるため、段階的に下げる
+    for thr in range(max_sc, 1, -1):
+        top = [(mo, d, sc) for mo, d, sc in candidates if sc == thr]
+        if not top:
             continue
-        if dt.date() >= today:
-            future.append((mo, d))
-        else:
-            past.append((mo, d))
+        future: list[tuple[int, int]] = []
+        past: list[tuple[int, int]] = []
+        for mo, d, _ in top:
+            dt = _date_in_year(year, mo, d)
+            if not dt:
+                continue
+            if dt.date() >= today:
+                future.append((mo, d))
+            else:
+                past.append((mo, d))
 
-    if future:
+        if future:
 
-        def ord_future(md: tuple[int, int]) -> int:
-            dt = _date_in_year(year, md[0], md[1])
-            return dt.date().toordinal() if dt else 10**9
+            def ord_future(md: tuple[int, int]) -> int:
+                dt = _date_in_year(year, md[0], md[1])
+                return dt.date().toordinal() if dt else 10**9
 
-        mo, d = min(future, key=ord_future)
-        return f"{mo:02d}/{d:02d}"
-    if past:
+            mo, d = min(future, key=ord_future)
+            return f"{mo:02d}/{d:02d}"
+        if past:
 
-        def ord_past(md: tuple[int, int]) -> int:
-            dt = _date_in_year(year, md[0], md[1])
-            return dt.date().toordinal() if dt else 0
+            def ord_past(md: tuple[int, int]) -> int:
+                dt = _date_in_year(year, md[0], md[1])
+                return dt.date().toordinal() if dt else 0
 
-        mo, d = max(past, key=ord_past)
-        return f"{mo:02d}/{d:02d}"
+            mo, d = max(past, key=ord_past)
+            return f"{mo:02d}/{d:02d}"
     return ""
 
 
@@ -156,7 +159,7 @@ def find_end_mmdd(text: str, now_jst: datetime) -> str:
             candidates.append((mo, d, 9))
 
     for m in re.finditer(
-        r"(?:予約・販売期間|販売期間)\s*[：:][\s\S]{0,360}?～\s*(\d{1,2})月(\d{1,2})日",
+        r"(?:予約・販売期間|販売期間)\s*[：:][\s\S]{0,520}?～\s*(\d{1,2})月(\d{1,2})日",
         text,
     ):
         mo, d = int(m.group(1)), int(m.group(2))
@@ -205,6 +208,18 @@ def find_end_mmdd(text: str, now_jst: datetime) -> str:
                 continue
             candidates.append((mo, d, 4))
 
+    # JAL 等: 「0:00～2月8日23:59」「0：00～2月8日」系（販売期間行が長い／コロン表記ゆれ）
+    for m in re.finditer(
+        r"(?:0:00|0：00)\s*[～~]\s*(\d{1,2})月(\d{1,2})日",
+        text,
+    ):
+        mo, d = int(m.group(1)), int(m.group(2))
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            w = _context_window(text, m.start(), m.end())
+            if _boarding_heavy_window(w):
+                continue
+            candidates.append((mo, d, 7))
+
     return _pick_best_end(candidates, now_jst)
 
 
@@ -238,6 +253,7 @@ def fallback_row(src: dict[str, Any]) -> dict[str, Any]:
         "airline": str(src.get("airline") or ""),
         "airline_url": str(src.get("airline_url") or ""),
         "dot": str(src.get("dot") or "#888888"),
+        "campaign_url": str(src.get("campaign_url") or "").strip(),
         "status": "none",
         "sale_name": "",
         "end_date": "",
@@ -257,12 +273,13 @@ def merge_fallback_airlines(
 
 
 def row_from_source(src: dict[str, Any], now_jst: datetime) -> dict[str, Any]:
+    url = str(src.get("campaign_url") or "").strip()
     base = {
         "airline": str(src.get("airline") or ""),
         "airline_url": str(src.get("airline_url") or ""),
         "dot": str(src.get("dot") or "#888888"),
+        "campaign_url": url,
     }
-    url = str(src.get("campaign_url") or "").strip()
     if not url:
         out = fallback_row(src)
         return out

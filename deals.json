@@ -5,6 +5,7 @@
       "airline": "JAL",
       "airline_url": "https://www.jal.co.jp/jp/ja/",
       "dot": "#E24B4A",
+      "campaign_url": "https://www.jal.co.jp/jp/ja/dom/special/timesale/",
       "status": "active",
       "sale_name": "",
       "end_date": ""
@@ -13,6 +14,7 @@
       "airline": "ANA",
       "airline_url": "https://www.ana.co.jp/",
       "dot": "#378ADD",
+      "campaign_url": "https://www.ana.co.jp/ja/jp/domestic/theme/timesale/sv/",
       "status": "none",
       "sale_name": "",
       "end_date": ""
@@ -21,6 +23,7 @@
       "airline": "ソラシドエア",
       "airline_url": "https://www.solaseedair.jp/",
       "dot": "#1D9E75",
+      "campaign_url": "https://www.solaseedair.jp/fare/limited-special-saver/",
       "status": "active",
       "sale_name": "",
       "end_date": ""
@@ -29,6 +32,7 @@
       "airline": "スカイマーク",
       "airline_url": "https://www.skymark.co.jp/ja/",
       "dot": "#534AB7",
+      "campaign_url": "https://www.skymark.co.jp/ja/",
       "status": "none",
       "sale_name": "",
       "end_date": ""
@@ -37,6 +41,7 @@
       "airline": "Peach",
       "airline_url": "https://www.flypeach.com/jp/ja-jp",
       "dot": "#E05A7A",
+      "campaign_url": "https://www.flypeach.com/jp/ja-jp",
       "status": "active",
       "sale_name": "",
       "end_date": ""
@@ -45,6 +50,7 @@
       "airline": "ジェットスタージャパン",
       "airline_url": "https://www.jetstar.com/jp/ja",
       "dot": "#EF9F27",
+      "campaign_url": "https://www.jetstar.com/jp/ja/deals",
       "status": "none",
       "sale_name": "",
       "end_date": ""

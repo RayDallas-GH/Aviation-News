@@ -23,7 +23,7 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 - **バッジ**: `feeds.yaml` の **`breaking_keywords`** に一致すると **BREAKING**（列内で先頭付近にソート）。**`category_keywords`** で路線・財務・機材・国際線・その他を付与。
 - **カテゴリフィルター**: 静的 HTML のため、ブラウザ上のスクリプトで `.news-row` の表示を切り替えます（「全カテゴリ」以外では、該当カテゴリが付いていない行は隠れます）。
 - **自動更新 5分**: `index.html` に `<meta http-equiv="refresh" content="300">` があり、5分ごとにページを再読み込みします。表示内容そのものは **GitHub Actions のビルド結果** までしか更新されません（再読込で取得できるのは直近デプロイ済みの静的ファイルです）。
-- **下段**: 那覇発着のお得情報テーブル（**エアライン / ステータス / 終了日**の3列）。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、本文から日付表現を探して **終了日（MM/DD）** と **`active` / `none`** を推定します。**開催中**は **終了日が取れ、かつ今日以降の締切で、セール系の語がタイトルまたは本文に当たるときだけ**（終了日が空のまま開催中にならないようにしています）。判定にはページタイトルも参照します。ヒューリスティックのため **公式と必ず一致するとは限りません**。**`OUT_DIR/deals.json`** に **`fetched_at`**（取得時刻）付きで書きます。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。テーブル直下に **反映時刻**を表示します。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
+- **下段**: 那覇発着のお得情報テーブル（**エアライン（TOP） / セール（取得元URL） / ステータス / 終了日**の4列・コンパクト表示）。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、各行に **`campaign_url`** を書き込み、本文から **終了日（MM/DD）** を推定します。**終了済みでも、ページから取れた販売締切があれば表示**します（ステータスは `none` のまま）。**開催中**は **終了日が取れ、かつ今日以降の締切で、セール系の語がタイトルまたは本文に当たるときだけ**。ヒューリスティックのため **公式と必ず一致するとは限りません**。**`OUT_DIR/deals.json`** に **`fetched_at`**（取得時刻）付きで書きます。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。テーブル直下に **反映時刻**を表示します。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
 
 ## `feeds.yaml`
 
@@ -41,7 +41,7 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 ## `deals.json`（フォールバック）
 
 - **`deals_fetcher.py` を実行しない**、または **`public/deals.json` が無い** ときに `renderer.py` が読みます（手動メンテ用）。
-- フィールドは `airline`, `airline_url`, `dot`, `status`, `end_date`（`sale_name` は互換のため空文字で残す場合があります）。
+- フィールドは `airline`, `airline_url`, `dot`, `campaign_url`, `status`, `end_date`（`sale_name` は互換のため空文字で残す場合があります）。
 
 ## お得情報の更新タイミング
 

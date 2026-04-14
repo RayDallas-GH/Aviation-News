@@ -208,6 +208,15 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
             )
         else:
             airline_cell = airline_esc
+        sale_u = str(d.get("campaign_url") or "").strip()
+        if sale_u.startswith(("https://", "http://")):
+            su_esc = html.escape(sale_u, quote=True)
+            sale_cell = (
+                f'<a class="deal-sale-url" href="{su_esc}" '
+                f'target="_blank" rel="noopener noreferrer">セール</a>'
+            )
+        else:
+            sale_cell = '<span class="muted">—</span>'
         dot = html.escape(str(d.get("dot") or "#888"))
         st = str(d.get("status") or "none")
         if st == "active":
@@ -223,13 +232,14 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
         rows.append(
             f"""<tr>
   <td class="deal-airline"><span class="deal-dot" style="background:{dot}"></span>{airline_cell}</td>
+  <td class="deal-sale-page">{sale_cell}</td>
   <td class="deal-status">{status_html}</td>
   <td class="deal-end">{end_html}</td>
 </tr>"""
         )
     if not rows:
         rows.append(
-            '<tr><td colspan="3" class="deal-empty">deals_fetcher.py で生成するか、deals.json に行を追加してください。</td></tr>'
+            '<tr><td colspan="4" class="deal-empty">deals_fetcher.py で生成するか、deals.json に行を追加してください。</td></tr>'
         )
     return "\n".join(rows)
 
@@ -657,6 +667,7 @@ def main() -> int:
     .deals-wrap {{ margin-top: 1.75rem; }}
     .deals-table {{
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       background: var(--color-surface);
       border: 1px solid var(--color-border);
@@ -670,7 +681,7 @@ def main() -> int:
       }}
     }}
     .deals-table th, .deals-table td {{
-      padding: 0.45rem 0.5rem;
+      padding: 0.3rem 0.35rem;
       border-bottom: 1px solid var(--color-border);
       text-align: left;
       vertical-align: middle;
@@ -686,10 +697,11 @@ def main() -> int:
       background: var(--color-bg);
     }}
     .deals-table td {{
-      font-size: 1rem;
+      font-size: 0.9375rem;
     }}
     .deal-airline {{
-      width: 148px;
+      width: 22%;
+      min-width: 0;
       font-weight: 500;
     }}
     .deal-airline-link {{
@@ -713,8 +725,23 @@ def main() -> int:
       margin-right: 0.35rem;
       vertical-align: middle;
     }}
-    .deal-status {{ width: 96px; }}
-    .deal-end {{ width: 140px; font-size: 1rem; }}
+    .deal-sale-page {{
+      width: 4.5rem;
+      text-align: center;
+      white-space: nowrap;
+    }}
+    .deal-sale-url {{
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--link-accent);
+      text-decoration: none;
+    }}
+    .deal-sale-url:hover {{ text-decoration: underline; filter: brightness(0.92); }}
+    @media (prefers-color-scheme: dark) {{
+      .deal-sale-url:hover {{ filter: brightness(1.12); }}
+    }}
+    .deal-status {{ width: 4.5rem; text-align: center; white-space: nowrap; }}
+    .deal-end {{ width: 5.5rem; font-size: 0.875rem; text-align: right; white-space: nowrap; }}
     .deal-badge {{
       display: inline-block;
       font-size: 0.75rem;
@@ -779,6 +806,7 @@ def main() -> int:
           <thead>
             <tr>
               <th>エアライン</th>
+              <th>セール</th>
               <th>ステータス</th>
               <th>終了日</th>
             </tr>
