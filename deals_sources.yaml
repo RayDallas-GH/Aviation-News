@@ -9,7 +9,7 @@ sources:
   - airline: ANA
     dot: "#378ADD"
     airline_url: "https://www.ana.co.jp/"
-    campaign_url: "https://www.ana.co.jp/ja/jp/"
+    campaign_url: "https://www.ana.co.jp/ja/jp/domestic/theme/timesale/sv/"
   - airline: ソラシドエア
     dot: "#1D9E75"
     airline_url: "https://www.solaseedair.jp/"
