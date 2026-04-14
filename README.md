@@ -42,14 +42,14 @@ python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && py
 
 ## `deals_sources.yaml`（自動）
 
-- 各行: `airline`, `dot`, `airline_url`（社名リンク）, **`campaign_url`**（セール情報を読みに行く URL）。
+- 各行: `airline`, `dot`, `airline_url`（社名リンク）, **`campaign_url`**（セール情報を読みに行く URL）, **`sale_abbr`**（セール列リンク表記「◯◯セール」用。例: `JAL`, `JJP`）。
 - **販売終了日**は「～◯月◯日（曜）23:59」「予約・販売期間：…～◯月◯日」「◯/◯（曜）09:59まで」などをヒューリスティックに解析し、**搭乗期間**の行と紛らわしい候補は落とし気味です（ページによっては未取得・誤検出があり得ます）。
 - サイトの HTML 変更でパースが外れることがあります。取得元を変える場合は `campaign_url` を公式のキャンペーン一覧などに差し替えてください。
 
 ## `deals.json`（フォールバック）
 
 - **`deals_fetcher.py` を実行しない**、または **`public/deals.json` が無い** ときに `renderer.py` が読みます（手動メンテ用）。
-- フィールドは `airline`, `airline_url`, `dot`, `campaign_url`, `status`, `end_date`（`sale_name` は互換のため空文字で残す場合があります）。
+- フィールドは `airline`, `airline_url`, `dot`, `campaign_url`, `sale_abbr`, `status`, `end_date`（`sale_name` は互換のため空文字で残す場合があります）。`sale_abbr` が無いときはセール列は「セール」と表示。
 
 ## お得情報の更新タイミング
 

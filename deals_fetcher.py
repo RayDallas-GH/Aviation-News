@@ -254,6 +254,7 @@ def fallback_row(src: dict[str, Any]) -> dict[str, Any]:
         "airline_url": str(src.get("airline_url") or ""),
         "dot": str(src.get("dot") or "#888888"),
         "campaign_url": str(src.get("campaign_url") or "").strip(),
+        "sale_abbr": str(src.get("sale_abbr") or "").strip(),
         "status": "none",
         "sale_name": "",
         "end_date": "",
@@ -274,11 +275,13 @@ def merge_fallback_airlines(
 
 def row_from_source(src: dict[str, Any], now_jst: datetime) -> dict[str, Any]:
     url = str(src.get("campaign_url") or "").strip()
+    sale_abbr = str(src.get("sale_abbr") or "").strip()
     base = {
         "airline": str(src.get("airline") or ""),
         "airline_url": str(src.get("airline_url") or ""),
         "dot": str(src.get("dot") or "#888888"),
         "campaign_url": url,
+        "sale_abbr": sale_abbr,
     }
     if not url:
         out = fallback_row(src)

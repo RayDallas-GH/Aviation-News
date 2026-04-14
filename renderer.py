@@ -275,11 +275,13 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
         else:
             airline_cell = airline_esc
         sale_u = str(d.get("campaign_url") or "").strip()
+        abbr = str(d.get("sale_abbr") or "").strip()
+        sale_link_label = html.escape(f"{abbr}セール" if abbr else "セール")
         if sale_u.startswith(("https://", "http://")):
             su_esc = html.escape(sale_u, quote=True)
             sale_cell = (
                 f'<a class="deal-sale-url" href="{su_esc}" '
-                f'target="_blank" rel="noopener noreferrer">セール</a>'
+                f'target="_blank" rel="noopener noreferrer">{sale_link_label}</a>'
             )
         else:
             sale_cell = '<span class="muted">—</span>'
