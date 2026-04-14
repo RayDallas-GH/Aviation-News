@@ -30,6 +30,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # 航空会社ニュース → メーカー/eVTOL（industry_news.json）→ お得情報 → HTML
       - name: Fetch and render
         env:
           OUT_DIR: public

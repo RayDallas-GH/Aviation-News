@@ -151,6 +151,7 @@ def main() -> int:
             seen_links.add(link)
             buckets[tid].append(
                 {
+                    "track": tid,
                     "title": title_clean,
                     "link": link,
                     "published": entry_published_iso(entry),

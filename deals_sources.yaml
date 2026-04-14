@@ -1,6 +1,6 @@
 # お得情報テーブル用。各社のキャンペーン・セール案内ページを GET し、タイトル・終了日を推定する（サイト改修で壊れる可能性あり）。
 # airline_url はテーブル内の社名リンク先（トップでも可）。
-# sale_abbr: セール列リンクの表記「◯◯セール」用の略称（英大文字推奨）。
+# sale_abbr: セール列リンクの表記「◯◯セール」用（略称・社名の一部など。日本語可）。
 
 sources:
   - airline: JAL
@@ -14,17 +14,17 @@ sources:
     airline_url: "https://www.ana.co.jp/"
     campaign_url: "https://www.ana.co.jp/ja/jp/domestic/theme/timesale/sv/"
   - airline: ソラシドエア
-    sale_abbr: "6J"
+    sale_abbr: ソラシド
     dot: "#1D9E75"
     airline_url: "https://www.solaseedair.jp/"
     campaign_url: "https://www.solaseedair.jp/fare/limited-special-saver/"
   - airline: スカイマーク
-    sale_abbr: BC
+    sale_abbr: スカイ
     dot: "#534AB7"
     airline_url: "https://www.skymark.co.jp/ja/"
     campaign_url: "https://www.skymark.co.jp/ja/"
   - airline: Peach
-    sale_abbr: MM
+    sale_abbr: Peach
     dot: "#E05A7A"
     airline_url: "https://www.flypeach.com/jp/ja-jp"
     campaign_url: "https://www.flypeach.com/jp/ja-jp"

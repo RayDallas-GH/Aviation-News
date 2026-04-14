@@ -35,14 +35,32 @@ python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && py
 
 ## `industry_feeds.yaml` と `industry_fetcher.py`
 
-- **`feeds`**: RSS の URL（フェーズ1は Aviation Wire 1 本。行を足してソース追加）。
-- **`match_order`**: 複数トラックにキーワードが当たるときの優先順（既定 `aam` → `intl_oem` → `jp_oem`）。
-- **`tracks`**: 各トラックの `label_ja`、`include` キーワード、`per_track_limit`。
-- **`exclude`**: 除外キーワード（任意）。例: **デルタ航空**はエアラインのためメーカー列対象外（`industry_fetcher` は除外一致の記事をトラックに入れない）。
+メーカー・eVTOL ニュースは **`fetcher.py`（航空会社向け）とは別パイプライン**です。`fetcher.py` は `keyword_groups`（jal/ana/oth）に当たった記事だけを `items.json` に載せるため、機体メーカー単独の記事は本パイプラインで拾います。
+
+- **`feeds`**: RSS の URL（フェーズ1は Aviation Wire 1 本。**後続**で Flight Global 等の公式・他メディア RSS を `feeds` に行追加すれば、同じ `industry_fetcher.py` がマージ取得します）。
+- **`match_order`**: 1記事が複数トラックの `include` に当たるとき、**先に書いたトラックだけ**に入れる（既定 **`aam` → `intl_oem` → `jp_oem`**）。空飛ぶクルマ系を海外 OEM より優先するための順序です。
+- **`tracks`**: 内部 ID と表示名・キーワード・件数上限。
+  | トラック ID | 表示（`label_ja`） | 上限目安 | 内容の目安 |
+  |-------------|-------------------|---------|------------|
+  | `jp_oem` | 日系メーカー | 8 | 三菱重工・川重・IHI 等、日系の航空機・エンジン・機体関連（`include` に **三菱重工** を必ず含める） |
+  | `intl_oem` | 海外メーカー | 8 | Boeing / Airbus / Embraer 等 |
+  | `aam` | 空飛ぶクルマ | 12 | SkyDrive / Joby / eVTOL / UAM 等。記事数が少ない想定で **キーワードは広め**（YAML で随時追加） |
+- **`exclude`**: 記事タイトル＋要約に一致したらスキップ（任意）。例: **デルタ航空**はエアライン便益の記事が多いためメーカー列から除外。
+
+**出力**: `public/industry_news.json`（`generated_at`、`tracks[]` に `id` / `label_ja` / `items[]`。各 `items` 要素は `track` / `title` / `link` / `published` / `source_id` / `source_name`）。
+
+## GitHub Actions のビルド順
+
+[`.github/workflows/daily-report.yml`](.github/workflows/daily-report.yml) の **Fetch and render** は次の順で実行します（`OUT_DIR=public`）。
+
+1. `fetcher.py` → `public/items.json`（エアライン3カラム用）
+2. `industry_fetcher.py` → `public/industry_news.json`（お得情報の**直下**に表示する3カラム用。**`renderer.py` より前**に必須）
+3. `deals_fetcher.py` → `public/deals.json`
+4. `renderer.py` → `public/index.html`
 
 ## `deals_sources.yaml`（自動）
 
-- 各行: `airline`, `dot`, `airline_url`（社名リンク）, **`campaign_url`**（セール情報を読みに行く URL）, **`sale_abbr`**（セール列リンク表記「◯◯セール」用。例: `JAL`, `JJP`）。
+- 各行: `airline`, `dot`, `airline_url`（社名リンク）, **`campaign_url`**（セール情報を読みに行く URL）, **`sale_abbr`**（セール列リンク表記「◯◯セール」用。例: `JAL`, `ソラシド`, `Peach`, `JJP`）。
 - **販売終了日**は「～◯月◯日（曜）23:59」「予約・販売期間：…～◯月◯日」「◯/◯（曜）09:59まで」などをヒューリスティックに解析し、**搭乗期間**の行と紛らわしい候補は落とし気味です（ページによっては未取得・誤検出があり得ます）。
 - サイトの HTML 変更でパースが外れることがあります。取得元を変える場合は `campaign_url` を公式のキャンペーン一覧などに差し替えてください。
 

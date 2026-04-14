@@ -1,5 +1,7 @@
-# メーカー・AAM ニュース用。フェーズ1は Aviation Wire のみ。feeds に行を足してソース追加可。
-# 1記事は match_order の先に当たったトラックだけに入る（aam → 海外 → 日系）。
+# メーカー・eVTOL（AAM）ニュース用。フェーズ1は Aviation Wire のみ。
+# feeds に RSS 行を足せば同一 industry_fetcher で複数ソース化できる（公式 RSS 等は後続）。
+# 1記事は match_order の先に当たったトラックだけに入る（aam → intl_oem → jp_oem）。
+# 列: jp_oem=日系航空機・エンジン関連（三菱重工は必須キーワード）, intl_oem=海外 OEM, aam=空飛ぶクルマ（件数少なめ想定で include を広めに）。
 
 feeds:
   - id: aviationwire
@@ -70,3 +72,10 @@ tracks:
       - ジオふくろう
       - AeroMobility
       - ドローン配送
+      - EHang
+      - Vertical Aerospace
+      - Overair
+      - Supernal
+      - AutoFlight
+      - オートフライト
+      - 空飛ぶふくろう
