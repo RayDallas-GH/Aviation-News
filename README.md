@@ -23,7 +23,7 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 - **バッジ**: `feeds.yaml` の **`breaking_keywords`** に一致すると **BREAKING**（列内で先頭付近にソート）。**`category_keywords`** で路線・財務・機材・国際線・その他を付与。
 - **カテゴリフィルター**: 静的 HTML のため、ブラウザ上のスクリプトで `.news-row` の表示を切り替えます（「全カテゴリ」以外では、該当カテゴリが付いていない行は隠れます）。
 - **自動更新 5分**: `index.html` に `<meta http-equiv="refresh" content="300">` があり、5分ごとにページを再読み込みします。表示内容そのものは **GitHub Actions のビルド結果** までしか更新されません（再読込で取得できるのは直近デプロイ済みの静的ファイルです）。
-- **下段**: 那覇発着のお得情報テーブル。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、ページのタイトル（og:title / h1 等）を **セール名**、本文から日付表現を探して **終了日（MM/DD）** と **`active` / `none`** を推定し、**`OUT_DIR/deals.json`** に **`fetched_at`**（取得時刻）付きで書きます（ヒューリスティックのため **公式と必ず一致するとは限りません**）。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。テーブル直下に **反映時刻**を表示します。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
+- **下段**: 那覇発着のお得情報テーブル（**エアライン / ステータス / 終了日**の3列）。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、本文から日付表現を探して **終了日（MM/DD）** と **`active` / `none`** を推定します（判定にはページタイトルも参照。ヒューリスティックのため **公式と必ず一致するとは限りません**）。**`OUT_DIR/deals.json`** に **`fetched_at`**（取得時刻）付きで書きます。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。テーブル直下に **反映時刻**を表示します。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
 
 ## `feeds.yaml`
 
@@ -41,7 +41,7 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 ## `deals.json`（フォールバック）
 
 - **`deals_fetcher.py` を実行しない**、または **`public/deals.json` が無い** ときに `renderer.py` が読みます（手動メンテ用）。
-- フィールドは従来どおり（`airline`, `airline_url`, `dot`, `status`, `sale_name`, `end_date`）。
+- フィールドは `airline`, `airline_url`, `dot`, `status`, `end_date`（`sale_name` は互換のため空文字で残す場合があります）。
 
 ## お得情報の更新タイミング
 

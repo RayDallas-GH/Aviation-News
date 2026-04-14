@@ -209,9 +209,9 @@ def find_end_mmdd(text: str, now_jst: datetime) -> str:
 
 
 def decide_status(
-    sale_name: str, end_mmdd: str, text: str, now_jst: datetime
+    title_hint: str, end_mmdd: str, text: str, now_jst: datetime
 ) -> str:
-    head = (sale_name + "\n" + text[:6000]).lower()
+    head = (title_hint + "\n" + text[:6000]).lower()
     if end_mmdd:
         mo, da = int(end_mmdd[:2]), int(end_mmdd[3:5])
         try:
@@ -220,7 +220,7 @@ def decide_status(
                 return "none"
         except ValueError:
             return "none"
-    if not sale_name or len(sale_name.strip()) < 3:
+    if not title_hint or len(title_hint.strip()) < 3:
         return "none"
     if re.search(
         r"セール|キャンペーン|タイムセール|sale|プロモ|特価|割引|キャンペ|スペシャル|期間限定",
@@ -275,14 +275,14 @@ def row_from_source(src: dict[str, Any], now_jst: datetime) -> dict[str, Any]:
     title = extract_title(soup)
     plain = extract_plain(soup)
     end_mmdd = find_end_mmdd(plain, now_jst)
-    sale_name = title
-    if len(sale_name) > 80:
-        sale_name = sale_name[:77] + "…"
-    status = decide_status(sale_name, end_mmdd, plain, now_jst)
-    out_sale = sale_name if len(sale_name.strip()) >= 3 else ""
+    title_for_status = title[:120] if title else ""
+    if len(title_for_status) > 80:
+        title_for_status = title_for_status[:77] + "…"
+    status = decide_status(title_for_status, end_mmdd, plain, now_jst)
     out_end = end_mmdd if end_mmdd else ""
 
-    return {**base, "status": status, "sale_name": out_sale, "end_date": out_end}
+    # sale_name は互換のためキーのみ残し、表示はしない（タイトルはサイト名に近く有用でない）
+    return {**base, "status": status, "sale_name": "", "end_date": out_end}
 
 
 def main() -> int:

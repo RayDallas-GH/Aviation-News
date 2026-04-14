@@ -6,7 +6,7 @@
       "airline_url": "https://www.jal.co.jp/jp/ja/",
       "dot": "#E24B4A",
       "status": "active",
-      "sale_name": "国内線タイムセール",
+      "sale_name": "",
       "end_date": ""
     },
     {
@@ -22,7 +22,7 @@
       "airline_url": "https://www.solaseedair.jp/",
       "dot": "#1D9E75",
       "status": "active",
-      "sale_name": "スーパーセール",
+      "sale_name": "",
       "end_date": ""
     },
     {
@@ -38,7 +38,7 @@
       "airline_url": "https://www.flypeach.com/jp/ja-jp",
       "dot": "#E05A7A",
       "status": "active",
-      "sale_name": "セール・プロモーション",
+      "sale_name": "",
       "end_date": ""
     },
     {

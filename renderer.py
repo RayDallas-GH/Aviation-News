@@ -214,11 +214,6 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
             status_html = '<span class="deal-badge deal-badge--on">開催中</span>'
         else:
             status_html = '<span class="deal-badge deal-badge--off">なし</span>'
-        sale = d.get("sale_name") or ""
-        if sale:
-            sale_html = f'<span class="deal-sale">{html.escape(str(sale))}</span>'
-        else:
-            sale_html = '<span class="deal-sale deal-sale--muted">現在セール設定なし</span>'
         end = d.get("end_date") or ""
         end_html = (
             f'<span class="mono">〜 {html.escape(str(end))}</span>'
@@ -229,13 +224,12 @@ def render_deals_rows(deals: list[dict[str, Any]]) -> str:
             f"""<tr>
   <td class="deal-airline"><span class="deal-dot" style="background:{dot}"></span>{airline_cell}</td>
   <td class="deal-status">{status_html}</td>
-  <td class="deal-name">{sale_html}</td>
   <td class="deal-end">{end_html}</td>
 </tr>"""
         )
     if not rows:
         rows.append(
-            '<tr><td colspan="4" class="deal-empty">deals_fetcher.py で生成するか、deals.json に行を追加してください。</td></tr>'
+            '<tr><td colspan="3" class="deal-empty">deals_fetcher.py で生成するか、deals.json に行を追加してください。</td></tr>'
         )
     return "\n".join(rows)
 
@@ -720,8 +714,7 @@ def main() -> int:
       vertical-align: middle;
     }}
     .deal-status {{ width: 96px; }}
-    .deal-name {{ width: auto; }}
-    .deal-end {{ width: 120px; font-size: 1rem; }}
+    .deal-end {{ width: 140px; font-size: 1rem; }}
     .deal-badge {{
       display: inline-block;
       font-size: 0.75rem;
@@ -732,7 +725,6 @@ def main() -> int:
     }}
     .deal-badge--on {{ background: var(--deal-on-bg); color: var(--deal-on-fg); }}
     .deal-badge--off {{ background: var(--deal-off-bg); color: var(--deal-off-fg); }}
-    .deal-sale--muted {{ color: var(--color-muted); }}
     .deal-empty {{ text-align: center; color: var(--color-muted); }}
     .deals-meta {{
       margin: 0.5rem 0 0;
@@ -788,7 +780,6 @@ def main() -> int:
             <tr>
               <th>エアライン</th>
               <th>ステータス</th>
-              <th>セール名</th>
               <th>終了日</th>
             </tr>
           </thead>
