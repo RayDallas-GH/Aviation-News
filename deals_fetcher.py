@@ -211,26 +211,26 @@ def find_end_mmdd(text: str, now_jst: datetime) -> str:
 def decide_status(
     title_hint: str, end_mmdd: str, text: str, now_jst: datetime
 ) -> str:
-    head = (title_hint + "\n" + text[:6000]).lower()
-    if end_mmdd:
-        mo, da = int(end_mmdd[:2]), int(end_mmdd[3:5])
-        try:
-            end_dt = datetime(now_jst.year, mo, da, 23, 59, 59, tzinfo=JST)
-            if end_dt.date() < now_jst.date():
-                return "none"
-        except ValueError:
-            return "none"
+    """開催中は終了日が取れ、今日以降の締切で、かつセール系の文脈があるときのみ（終了日ブランクの開催中を防ぐ）。"""
     if not title_hint or len(title_hint.strip()) < 3:
         return "none"
-    if re.search(
-        r"セール|キャンペーン|タイムセール|sale|プロモ|特価|割引|キャンペ|スペシャル|期間限定",
+    if not end_mmdd:
+        return "none"
+    mo, da = int(end_mmdd[:2]), int(end_mmdd[3:5])
+    try:
+        end_dt = datetime(now_jst.year, mo, da, 23, 59, 59, tzinfo=JST)
+    except ValueError:
+        return "none"
+    if end_dt.date() < now_jst.date():
+        return "none"
+    head = (title_hint + "\n" + text[:6000]).lower()
+    if not re.search(
+        r"セール|キャンペーン|タイムセール|sale|プロモ|特価|割引|キャンペ|スペシャル|期間限定|販売期間|予約・販売",
         head,
         re.I,
     ):
-        return "active"
-    if end_mmdd:
-        return "active"
-    return "none"
+        return "none"
+    return "active"
 
 
 def fallback_row(src: dict[str, Any]) -> dict[str, Any]:

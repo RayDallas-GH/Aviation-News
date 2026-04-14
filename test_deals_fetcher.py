@@ -55,6 +55,16 @@ class TestDecideStatus(unittest.TestCase):
         now = _dt(2026, 6, 1)
         self.assertEqual(decide_status(title, "04/21", "セール", now), "none")
 
+    def test_keywords_but_no_end_date_is_none(self) -> None:
+        title = "国内線タイムセール｜JAL"
+        now = _dt(2026, 4, 14)
+        self.assertEqual(decide_status(title, "", "セール実施中", now), "none")
+
+    def test_future_end_without_sale_context_is_none(self) -> None:
+        title = "会社概要"
+        now = _dt(2026, 4, 14)
+        self.assertEqual(decide_status(title, "12/31", "沿革をご覧ください。", now), "none")
+
 
 if __name__ == "__main__":
     unittest.main()
