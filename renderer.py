@@ -7,11 +7,13 @@ import html
 import json
 import os
 import re
+
+import yaml
 import shutil
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 OUT_DIR = Path(os.environ.get("OUT_DIR", "public"))
 REPO_ROOT = Path(__file__).resolve().parent
@@ -19,6 +21,8 @@ ITEMS_PATH = OUT_DIR / "items.json"
 DEALS_SRC = REPO_ROOT / "deals.json"
 DEALS_OUT = OUT_DIR / "deals.json"
 INDUSTRY_PATH = OUT_DIR / "industry_news.json"
+FEEDS_YAML = REPO_ROOT / "feeds.yaml"
+INDUSTRY_FEEDS_YAML = REPO_ROOT / "industry_feeds.yaml"
 JST = timezone(timedelta(hours=9))
 
 DEFAULT_INDUSTRY_TRACKS: list[dict[str, Any]] = [
@@ -177,6 +181,73 @@ def load_deals_with_meta() -> tuple[list[dict[str, Any]], str | None]:
 
 def escape_attr(val: str) -> str:
     return html.escape(val, quote=True)
+
+
+def _rss_feed_entries_from_yaml(path: Path) -> list[tuple[str, str]]:
+    """YAML の feeds から (表示名, URL) を取り出す。URL 空は名前のみ。"""
+    out: list[tuple[str, str]] = []
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return out
+    for fd in raw.get("feeds") or []:
+        if not isinstance(fd, dict):
+            continue
+        name = str(fd.get("name") or fd.get("id") or "").strip()
+        url = str(fd.get("url") or "").strip()
+        if not name:
+            continue
+        if url.startswith(("http://", "https://")):
+            out.append((name, url))
+        else:
+            out.append((name, ""))
+    return out
+
+
+def _format_feed_link_entries(entries: list[tuple[str, str]]) -> str:
+    parts: list[str] = []
+    for name, url in entries:
+        if url:
+            parts.append(
+                f'<a href="{escape_attr(url)}" target="_blank" rel="noopener noreferrer">'
+                f"{html.escape(name)}</a>"
+            )
+        else:
+            parts.append(html.escape(name))
+    return "、".join(parts) if parts else ""
+
+
+def _merge_feed_entries_unique(paths: Iterable[Path]) -> list[tuple[str, str]]:
+    """複数 YAML の feeds を順に読み、同一 URL（または名前のみの行）は1回だけ残す。"""
+    seen: set[str] = set()
+    out: list[tuple[str, str]] = []
+    for path in paths:
+        for name, url in _rss_feed_entries_from_yaml(path):
+            key = url.strip().rstrip("/").lower() if url else f"name:{name.lower()}"
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append((name, url))
+    return out
+
+
+def build_sources_footer_html() -> str:
+    """ページ最下部用の引用・データ元（小さめの HTML 断片）。"""
+    merged = _merge_feed_entries_unique((FEEDS_YAML, INDUSTRY_FEEDS_YAML))
+    src_body = _format_feed_link_entries(merged)
+    if not src_body:
+        aw = "https://www.aviationwire.jp/feed/"
+        src_body = (
+            f'<a href="{escape_attr(aw)}" target="_blank" rel="noopener noreferrer">'
+            "Aviation Wire</a>"
+        )
+    future_note = html.escape("今後は Flight Global などを追加予定です。")
+    deals_note = html.escape("各航空会社の公式キャンペーンページ（上表のセール列リンク）。")
+    return f"""<div class="sources-foot" role="note" aria-label="引用・データ元">
+  <p class="sources-foot__line"><span class="sources-foot__label">引用元サイト</span>{src_body}</p>
+  <p class="sources-foot__line sources-foot__future muted">{future_note}</p>
+  <p class="sources-foot__line"><span class="sources-foot__label">お得情報</span>{deals_note}</p>
+</div>"""
 
 
 def badge_breaking() -> str:
@@ -397,6 +468,8 @@ def main() -> int:
         )
     else:
         industry_meta = ""
+
+    sources_footer = build_sources_footer_html()
 
     html_doc = f"""<!DOCTYPE html>
 <html lang="ja">
@@ -913,6 +986,43 @@ def main() -> int:
       text-align: center;
       font-family: var(--font-mono);
     }}
+    .footer-lead {{
+      margin: 0 auto;
+      max-width: 42rem;
+    }}
+    .sources-foot {{
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--color-border);
+      font-size: 0.6875rem;
+      line-height: 1.55;
+      color: var(--color-muted);
+      text-align: left;
+      max-width: 42rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-family: var(--font-sans);
+    }}
+    .sources-foot a {{
+      color: var(--link-accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }}
+    @media (prefers-color-scheme: dark) {{
+      .sources-foot a {{ color: #7eb8ea; }}
+    }}
+    .sources-foot__line {{
+      margin: 0.22rem 0;
+    }}
+    .sources-foot__line:first-child {{ margin-top: 0; }}
+    .sources-foot__line:last-child {{ margin-bottom: 0; }}
+    .sources-foot__label {{
+      display: inline-block;
+      margin-right: 0.4rem;
+      font-weight: 500;
+      font-family: var(--font-mono);
+      color: var(--color-muted);
+    }}
   </style>
 </head>
 <body>
@@ -973,7 +1083,8 @@ def main() -> int:
       </section>
     </main>
     <footer>
-      自動生成ダッシュボード。記事の著作権は各リンク先に帰属します。
+      <p class="footer-lead">自動生成ダッシュボード。記事の著作権は各リンク先に帰属します。</p>
+      {sources_footer}
     </footer>
   </div>
   <script>
