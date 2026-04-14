@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""items.json から閲覧用 index.html を生成する。AVIATION NEWS ダッシュボード仕様（3カラム＋那覇お得情報）。"""
+"""items.json から閲覧用 index.html を生成する。AVIATION NEWS（3カラム＋お得情報＋メーカー・AAM）。"""
 
 from __future__ import annotations
 
@@ -18,7 +18,14 @@ REPO_ROOT = Path(__file__).resolve().parent
 ITEMS_PATH = OUT_DIR / "items.json"
 DEALS_SRC = REPO_ROOT / "deals.json"
 DEALS_OUT = OUT_DIR / "deals.json"
+INDUSTRY_PATH = OUT_DIR / "industry_news.json"
 JST = timezone(timedelta(hours=9))
+
+DEFAULT_INDUSTRY_TRACKS: list[dict[str, Any]] = [
+    {"id": "jp_oem", "label_ja": "日系メーカー", "items": []},
+    {"id": "intl_oem", "label_ja": "海外メーカー", "items": []},
+    {"id": "aam", "label_ja": "空飛ぶクルマ", "items": []},
+]
 
 # 那覇お得情報見出し「那覇発着 … お得情報」の間。絵文字の例: "🛫" 飛行機 / "🏝️" 島 / "✈️"
 DEALS_SECTION_MARK = "\U0001f3dd\U0000fe0f"  # 🏝️ 島
@@ -89,6 +96,65 @@ def items_for_group(items: list[dict], group: str) -> list[dict]:
 
 def count_with_group(items: list[dict], group: str) -> int:
     return sum(1 for it in items if group in (it.get("groups") or []))
+
+
+def load_industry_tracks() -> tuple[list[dict[str, Any]], str, bool]:
+    """(tracks, generated_at 表示用 JST 行, ファイルが存在したか)。"""
+    if not INDUSTRY_PATH.is_file():
+        return ([], "", False)
+    try:
+        data = json.loads(INDUSTRY_PATH.read_text(encoding="utf-8"))
+        raw = data.get("tracks")
+        if not isinstance(raw, list):
+            return ([], "", True)
+        gen = data.get("generated_at") or ""
+        gen_line = format_header_jst(str(gen)) if gen else ""
+        return (list(raw), gen_line, True)
+    except Exception:
+        return ([], "", True)
+
+
+def render_industry_row(it: dict[str, Any]) -> str:
+    title = html.escape(str(it.get("title") or ""))
+    link_raw = str(it.get("link") or "").strip()
+    link_esc = escape_attr(link_raw)
+    t = format_item_time(str(it.get("published") or ""))
+    time_html = (
+        f'<span class="industry-row__time mono">{html.escape(t)}</span>' if t else ""
+    )
+    return f"""<div class="industry-row">
+  <div class="industry-row__head">{time_html}<a class="industry-row__title" href="{link_esc}" target="_blank" rel="noopener noreferrer">{title}</a></div>
+</div>"""
+
+
+def render_industry_section(tracks: list[dict[str, Any]]) -> str:
+    accent_classes = ["col-accent-jp", "col-accent-intl", "col-accent-aam"]
+    blocks: list[str] = []
+    for i, tr in enumerate(tracks):
+        if not isinstance(tr, dict):
+            continue
+        tid = str(tr.get("id") or f"t{i}")
+        label = html.escape(str(tr.get("label_ja") or tid))
+        items = tr.get("items") if isinstance(tr.get("items"), list) else []
+        accent = accent_classes[i] if i < len(accent_classes) else "col-accent-intl"
+        safe_id = re.sub(r"[^a-zA-Z0-9_-]", "-", tid)
+        if items:
+            body = "\n".join(
+                render_industry_row(it) for it in items if isinstance(it, dict)
+            )
+        else:
+            body = '<p class="industry-empty muted">該当記事はありません</p>'
+        n = len([x for x in items if isinstance(x, dict)])
+        blocks.append(
+            f"""<article class="col {accent}" aria-labelledby="h-ind-{safe_id}">
+  <header class="col-banner">
+    <h2 id="h-ind-{safe_id}" class="col-title">{label}</h2>
+    <span class="col-count mono">{n}</span>
+  </header>
+  <div class="col-body industry-col-body">{body}</div>
+</article>"""
+        )
+    return "\n".join(blocks)
 
 
 def load_deals_with_meta() -> tuple[list[dict[str, Any]], str | None]:
@@ -311,6 +377,24 @@ def main() -> int:
         f"{html.escape(DEALS_SECTION_MARK)}"
         f"</span>"
     )
+
+    industry_tracks, industry_gen_line, industry_file_ok = load_industry_tracks()
+    if not industry_tracks:
+        industry_tracks = [
+            {"id": x["id"], "label_ja": x["label_ja"], "items": list(x["items"])}
+            for x in DEFAULT_INDUSTRY_TRACKS
+        ]
+    industry_cols = render_industry_section(industry_tracks)
+    if industry_gen_line:
+        industry_meta = f'<p class="industry-meta muted mono">取得: {html.escape(industry_gen_line)}</p>'
+    elif not industry_file_ok:
+        industry_meta = (
+            '<p class="industry-meta muted">'
+            "industry_fetcher.py を実行すると記事が表示されます。"
+            "</p>"
+        )
+    else:
+        industry_meta = ""
 
     html_doc = f"""<!DOCTYPE html>
 <html lang="ja">
@@ -758,6 +842,67 @@ def main() -> int:
       font-size: 0.8125rem;
       line-height: 1.45;
     }}
+    .industry-wrap {{ margin-top: 1.75rem; }}
+    .industry-meta {{
+      margin: 0 0 0.35rem 0;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }}
+    .grid-industry {{
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      align-items: start;
+    }}
+    @media (max-width: 900px) {{
+      .grid-industry {{ grid-template-columns: 1fr; }}
+    }}
+    .col-accent-jp {{ border-top: 2px solid #2e7d32; }}
+    .col-accent-jp .col-banner {{ background: rgba(46, 125, 50, 0.1); }}
+    .col-accent-jp .col-title {{ color: #1b5e20; }}
+    .col-accent-intl {{ border-top: 2px solid var(--ana-accent); }}
+    .col-accent-intl .col-banner {{ background: var(--ana-bg); }}
+    .col-accent-intl .col-title {{ color: var(--ana-text); }}
+    .col-accent-aam {{ border-top: 2px solid var(--oth-accent); }}
+    .col-accent-aam .col-banner {{ background: var(--oth-bg); }}
+    .col-accent-aam .col-title {{ color: var(--oth-text); }}
+    @media (prefers-color-scheme: dark) {{
+      .col-accent-jp .col-banner {{ background: rgba(46, 125, 50, 0.18); }}
+      .col-accent-jp .col-title {{ color: #c8e6c9; }}
+    }}
+    .industry-col-body {{ padding-bottom: 0.5rem; }}
+    .industry-row {{
+      padding: 0.38rem 0.35rem;
+      border-bottom: 1px solid var(--color-border);
+    }}
+    .industry-row:last-child {{ border-bottom: none; }}
+    .industry-row:hover {{ background: rgba(11, 108, 181, 0.06); }}
+    @media (prefers-color-scheme: dark) {{
+      .industry-row:hover {{ background: rgba(94, 176, 240, 0.08); }}
+    }}
+    .industry-row__head {{
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.35rem 0.5rem;
+    }}
+    .industry-row__time {{
+      flex: 0 0 auto;
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+    }}
+    .industry-row__title {{
+      flex: 1 1 12rem;
+      font-size: 0.9375rem;
+      font-weight: 400;
+      color: var(--link-accent);
+      text-decoration: none;
+    }}
+    .industry-row__title:hover {{ text-decoration: underline; }}
+    .industry-empty {{
+      margin: 0.35rem 0.35rem 0.5rem;
+      font-size: 0.875rem;
+    }}
     .muted {{ color: var(--color-muted); }}
     footer {{
       margin-top: 2rem;
@@ -816,6 +961,13 @@ def main() -> int:
           </tbody>
         </table>
         <p class="deals-meta muted" aria-live="polite">お得情報の反映: <span class="mono">{html.escape(deals_asof_line)}</span> — {html.escape(deals_asof_caption)}</p>
+      </section>
+      <section class="industry-wrap" aria-labelledby="h-industry">
+        <p class="section-label" id="h-industry">メーカー・モビリティ <span class="muted" style="font-size:0.72em;font-weight:400;">（Aviation Wire）</span></p>
+        {industry_meta}
+        <div class="grid-industry" role="region" aria-label="メーカーおよび空飛ぶクルマ関連ニュース">
+          {industry_cols}
+        </div>
       </section>
     </main>
     <footer>

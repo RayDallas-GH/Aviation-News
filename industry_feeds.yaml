@@ -1,0 +1,69 @@
+# メーカー・AAM ニュース用。フェーズ1は Aviation Wire のみ。feeds に行を足してソース追加可。
+# 1記事は match_order の先に当たったトラックだけに入る（aam → 海外 → 日系）。
+
+feeds:
+  - id: aviationwire
+    name: Aviation Wire
+    url: https://www.aviationwire.jp/feed/
+
+# 先に評価するトラックほど優先（重複時は先勝ち）
+match_order: [aam, intl_oem, jp_oem]
+
+# 記事全体に当たったら除外（必要に応じて追加）
+exclude: []
+
+tracks:
+  jp_oem:
+    label_ja: 日系メーカー
+    per_track_limit: 8
+    include:
+      - 三菱重工
+      - MHI
+      - 三菱飛機
+      - スペースジェット
+      - SpaceJet
+      - 川崎重工
+      - カワサキ
+      - Kawasaki
+      - IHI
+      - 石川島播磨
+      - 航空機工業
+  intl_oem:
+    label_ja: 海外メーカー
+    per_track_limit: 8
+    include:
+      - Boeing
+      - ボーイング
+      - Airbus
+      - エアバス
+      - Embraer
+      - エンブラエル
+      - Bombardier
+      - ボンバルディア
+      - COMAC
+      - 中国商飛
+  aam:
+    label_ja: 空飛ぶクルマ
+    per_track_limit: 12
+    include:
+      - SkyDrive
+      - スカイドライブ
+      - Joby
+      - ジョビー
+      - eVTOL
+      - EVTOL
+      - UAM
+      - AAM
+      - 空飛ぶクルマ
+      - 空飛ぶ車
+      - エアモビリティ
+      - 都市航空モビリティ
+      - Volocopter
+      - ボロコプター
+      - Lilium
+      - Archer
+      - Beta Technologies
+      - Wisk
+      - ジオふくろう
+      - AeroMobility
+      - ドローン配送

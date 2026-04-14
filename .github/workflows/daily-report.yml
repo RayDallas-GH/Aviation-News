@@ -33,7 +33,7 @@ jobs:
       - name: Fetch and render
         env:
           OUT_DIR: public
-        run: python fetcher.py && python deals_fetcher.py && python renderer.py
+        run: python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && python renderer.py
 
       - uses: actions/upload-pages-artifact@v3
         with:

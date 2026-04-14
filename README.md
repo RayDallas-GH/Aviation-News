@@ -1,6 +1,6 @@
 # Aviation-News
 
-Aviation Wire の RSS から、キーワードで絞り込んだ記事を **`items.json`** に書き出し、**AVIATION NEWS** ダッシュボード HTML（**3カラム**: JAL グループ / ANA グループ / 独立系・LCC）を生成します。GitHub Actions で定期実行し、GitHub Pages で公開できます。
+Aviation Wire の RSS から、キーワードで絞り込んだ記事を **`items.json`** に書き出し、**AVIATION NEWS** ダッシュボード HTML（**上段3カラム**: JAL / ANA / 独立系・LCC、**お得情報**、**メーカー・モビリティ**の3列）を生成します。GitHub Actions で定期実行し、GitHub Pages で公開できます。
 
 公開 URL（Pages 有効後）: https://raydallas-gh.github.io/Aviation-News/
 
@@ -11,10 +11,10 @@ python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 export OUT_DIR=public
-python fetcher.py && python deals_fetcher.py && python renderer.py
+python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && python renderer.py
 ```
 
-`public/index.html` をブラウザで開いてください。お得情報だけ試す場合は `python deals_fetcher.py && python renderer.py`（`items.json` が既にある前提）でも構いません。
+`public/index.html` をブラウザで開いてください。お得情報だけ試す場合は `python deals_fetcher.py && python renderer.py`（`items.json` が既にある前提）でも構いません。メーカー列を含め試す場合は `items.json` に加え `python industry_fetcher.py` が必要です。
 
 ## ダッシュボードの内容
 
@@ -24,6 +24,7 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 - **カテゴリフィルター**: 静的 HTML のため、ブラウザ上のスクリプトで `.news-row` の表示を切り替えます（「全カテゴリ」以外では、該当カテゴリが付いていない行は隠れます）。
 - **自動更新 5分**: `index.html` に `<meta http-equiv="refresh" content="300">` があり、5分ごとにページを再読み込みします。表示内容そのものは **GitHub Actions のビルド結果** までしか更新されません（再読込で取得できるのは直近デプロイ済みの静的ファイルです）。
 - **下段**: 那覇発着のお得情報テーブル（**エアライン（TOP） / セール（取得元URL） / ステータス / 終了日**の4列・コンパクト表示）。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、各行に **`campaign_url`** を書き込み、本文から **終了日（MM/DD）** を推定します。**終了済みでも、ページから取れた販売締切があれば表示**します（ステータスは `none` のまま）。**開催中**は **終了日が取れ、かつ今日以降の締切で、セール系の語がタイトルまたは本文に当たるときだけ**。ヒューリスティックのため **公式と必ず一致するとは限りません**。**`OUT_DIR/deals.json`** に **`fetched_at`**（取得時刻）付きで書きます。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。テーブル直下に **反映時刻**を表示します。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
+- **メーカー・モビリティ**（お得情報の下）: **[industry_feeds.yaml](industry_feeds.yaml)** に従い **`industry_fetcher.py`** が Aviation Wire の RSS を読み、**日系メーカー / 海外メーカー / 空飛ぶクルマ**の3列に振り分けて **`public/industry_news.json`** を生成します。1記事は **`match_order`**（既定: AAM → 海外 → 日系）で先に当たった列だけに入ります。`renderer.py` が `industry_news.json` を読み込み表示します。当面は **Aviation Wire のみ**（`feeds` に URL を追加すれば他ソースも同じフェッチャーで取り込み可能）。
 
 ## `feeds.yaml`
 
@@ -31,6 +32,13 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 - **`keyword_groups`**: `jal` / `ana` / `oth` など。いずれかにマッチした記事だけ `items.json` に載ります。キーワードは YAML で数値と解釈されないよう **機材コード等はクォート推奨**（未クォートでもフェッチャー側で文字列化します）。
 - **`category_keywords`**: 各記事の `categories`（表示・フィルター用）。任意省略可。
 - **`breaking_keywords`**: `breaking: true` と BREAKING バッジ。省略時は `BREAKING` / `速報` / `緊急` を使用。
+
+## `industry_feeds.yaml` と `industry_fetcher.py`
+
+- **`feeds`**: RSS の URL（フェーズ1は Aviation Wire 1 本。行を足してソース追加）。
+- **`match_order`**: 複数トラックにキーワードが当たるときの優先順（既定 `aam` → `intl_oem` → `jp_oem`）。
+- **`tracks`**: 各トラックの `label_ja`、`include` キーワード、`per_track_limit`。
+- **`exclude`**: 除外キーワード（任意）。
 
 ## `deals_sources.yaml`（自動）
 
