@@ -23,6 +23,8 @@ DEALS_OUT = OUT_DIR / "deals.json"
 INDUSTRY_PATH = OUT_DIR / "industry_news.json"
 FEEDS_YAML = REPO_ROOT / "feeds.yaml"
 INDUSTRY_FEEDS_YAML = REPO_ROOT / "industry_feeds.yaml"
+# フッター「引用元サイト」の Aviation Wire リンク（RSS の /feed/ ではなくトップ）
+AVIATIONWIRE_CITATION_URL = "https://www.aviationwire.jp/"
 JST = timezone(timedelta(hours=9))
 
 DEFAULT_INDUSTRY_TRACKS: list[dict[str, Any]] = [
@@ -204,12 +206,21 @@ def _rss_feed_entries_from_yaml(path: Path) -> list[tuple[str, str]]:
     return out
 
 
+def _citation_href_for_feed(feed_url: str) -> str:
+    """引用元フッター用の href。AW の RSS URL はサイトトップに差し替える。"""
+    u = feed_url.strip().rstrip("/").lower()
+    if u.endswith("aviationwire.jp/feed"):
+        return AVIATIONWIRE_CITATION_URL
+    return feed_url
+
+
 def _format_feed_link_entries(entries: list[tuple[str, str]]) -> str:
     parts: list[str] = []
     for name, url in entries:
         if url:
+            href = _citation_href_for_feed(url)
             parts.append(
-                f'<a href="{escape_attr(url)}" target="_blank" rel="noopener noreferrer">'
+                f'<a href="{escape_attr(href)}" target="_blank" rel="noopener noreferrer">'
                 f"{html.escape(name)}</a>"
             )
         else:
@@ -236,9 +247,8 @@ def build_sources_footer_html() -> str:
     merged = _merge_feed_entries_unique((FEEDS_YAML, INDUSTRY_FEEDS_YAML))
     src_body = _format_feed_link_entries(merged)
     if not src_body:
-        aw = "https://www.aviationwire.jp/feed/"
         src_body = (
-            f'<a href="{escape_attr(aw)}" target="_blank" rel="noopener noreferrer">'
+            f'<a href="{escape_attr(AVIATIONWIRE_CITATION_URL)}" target="_blank" rel="noopener noreferrer">'
             "Aviation Wire</a>"
         )
     future_note = html.escape("今後は Flight Global などを追加予定です。")
