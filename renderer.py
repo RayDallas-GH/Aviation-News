@@ -963,7 +963,7 @@ def main() -> int:
         <p class="deals-meta muted" aria-live="polite">お得情報の反映: <span class="mono">{html.escape(deals_asof_line)}</span> — {html.escape(deals_asof_caption)}</p>
       </section>
       <section class="industry-wrap" aria-labelledby="h-industry">
-        <p class="section-label" id="h-industry">メーカー・モビリティ <span class="muted" style="font-size:0.72em;font-weight:400;">（Aviation Wire）</span></p>
+        <p class="section-label" id="h-industry">メーカー・モビリティ</p>
         {industry_meta}
         <div class="grid-industry" role="region" aria-label="メーカーおよび空飛ぶクルマ関連ニュース">
           {industry_cols}
