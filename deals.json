@@ -1,13 +1,13 @@
 {
-  "_readme": "手動メンテ用。公式運賃・セールは各社サイトで必ず確認してください。名称に「（例）」がある行はダミーです。",
+  "_readme": "各社公式のキャンペーン・運賃ページで開催期間と条件を確認のうえ更新してください。end_date は MM/DD（表示は 〜 MM/DD）。空欄は未設定または要確認。status は active=開催中 / none=なし。",
   "deals": [
     {
       "airline": "JAL",
       "airline_url": "https://www.jal.co.jp/jp/ja/",
       "dot": "#E24B4A",
       "status": "active",
-      "sale_name": "国内線セール（例）",
-      "end_date": "04/30"
+      "sale_name": "国内線タイムセール",
+      "end_date": ""
     },
     {
       "airline": "ANA",
@@ -22,8 +22,8 @@
       "airline_url": "https://www.solaseedair.jp/",
       "dot": "#1D9E75",
       "status": "active",
-      "sale_name": "スーパーセール（例）",
-      "end_date": "05/12"
+      "sale_name": "スーパーセール",
+      "end_date": ""
     },
     {
       "airline": "スカイマーク",
@@ -38,8 +38,8 @@
       "airline_url": "https://www.flypeach.com/jp/ja-jp",
       "dot": "#E05A7A",
       "status": "active",
-      "sale_name": "ピーチポイント2倍（例）",
-      "end_date": "04/25"
+      "sale_name": "セール・プロモーション",
+      "end_date": ""
     },
     {
       "airline": "ジェットスタージャパン",
