@@ -23,7 +23,7 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 - **バッジ**: `feeds.yaml` の **`breaking_keywords`** に一致すると **BREAKING**（列内で先頭付近にソート）。**`category_keywords`** で路線・財務・機材・国際線・その他を付与。
 - **カテゴリフィルター**: 静的 HTML のため、ブラウザ上のスクリプトで `.news-row` の表示を切り替えます（「全カテゴリ」以外では、該当カテゴリが付いていない行は隠れます）。
 - **自動更新 5分**: `index.html` に `<meta http-equiv="refresh" content="300">` があり、5分ごとにページを再読み込みします。表示内容そのものは **GitHub Actions のビルド結果** までしか更新されません（再読込で取得できるのは直近デプロイ済みの静的ファイルです）。
-- **下段**: 那覇発着のお得情報テーブル。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、ページのタイトル（og:title / h1 等）を **セール名**、本文から日付表現を探して **終了日（MM/DD）** と **`active` / `none`** を推定し、**`OUT_DIR/deals.json`** を書きます（ヒューリスティックのため **公式と必ず一致するとは限りません**）。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
+- **下段**: 那覇発着のお得情報テーブル。**`deals_fetcher.py`** が **[deals_sources.yaml](deals_sources.yaml)** の `campaign_url` を取得し、ページのタイトル（og:title / h1 等）を **セール名**、本文から日付表現を探して **終了日（MM/DD）** と **`active` / `none`** を推定し、**`OUT_DIR/deals.json`** に **`fetched_at`**（取得時刻）付きで書きます（ヒューリスティックのため **公式と必ず一致するとは限りません**）。`renderer.py` は **`public/deals.json` を優先**し、無いときだけリポジトリの **`deals.json`** を読み、それも無ければ `deals.json` を `public/` にコピーします。テーブル直下に **反映時刻**を表示します。見出しの区切りは **`DEALS_SECTION_MARK`**（デフォルトは島 🏝️）です。
 
 ## `feeds.yaml`
 
@@ -42,6 +42,12 @@ python fetcher.py && python deals_fetcher.py && python renderer.py
 
 - **`deals_fetcher.py` を実行しない**、または **`public/deals.json` が無い** ときに `renderer.py` が読みます（手動メンテ用）。
 - フィールドは従来どおり（`airline`, `airline_url`, `dot`, `status`, `sale_name`, `end_date`）。
+
+## お得情報の更新タイミング
+
+- 公開ページのお得情報は **`index.html` に焼き込み**で、**GitHub Actions が成功するたび**にだけ更新されます。テーブル直下の **「お得情報の反映」**に、`public/deals.json` の **`fetched_at`**（`deals_fetcher` 実行時刻・JST 表示）が出ます。リポジトリの `deals.json` のみを使っている場合は、ヘッダーと同じビルド時刻にフォールバックします。
+- **定期ビルド**は UTC **11:00 と 23:00**（JST では同日 **20:00** 頃と、日付が変わったあとの **08:00** 頃）の **1 日 2 回**です。その間は表示内容は変わりません。
+- 更新されているのに古いままに見えるときは、ブラウザの **強制再読込**（キャッシュ無視のリロード）を試してください。
 
 ## GitHub Pages
 

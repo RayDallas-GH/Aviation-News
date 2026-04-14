@@ -292,11 +292,13 @@ def main() -> int:
         return 1
 
     now_jst = datetime.now(timezone.utc).astimezone(JST)
+    fetched_at_utc = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     deals = [row_from_source(src, now_jst) for src in sources]
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     payload = {
         "_readme": "deals_fetcher.py が生成。編集は deals_sources.yaml かフォールバック deals.json。",
+        "fetched_at": fetched_at_utc,
         "deals": deals,
     }
     OUT_PATH.write_text(

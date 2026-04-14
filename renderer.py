@@ -91,19 +91,22 @@ def count_with_group(items: list[dict], group: str) -> int:
     return sum(1 for it in items if group in (it.get("groups") or []))
 
 
-def load_deals() -> list[dict[str, Any]]:
-    """deals_fetcher が書いた OUT_DIR/deals.json を優先。無ければリポジトリの deals.json。"""
+def load_deals_with_meta() -> tuple[list[dict[str, Any]], str | None]:
+    """deals_fetcher が書いた OUT_DIR/deals.json を優先。戻り値は (deals, fetched_at ISO または None)。"""
     for path in (DEALS_OUT, DEALS_SRC):
         if not path.is_file():
             continue
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
             raw = data.get("deals")
-            if isinstance(raw, list):
-                return list(raw)
+            if not isinstance(raw, list):
+                continue
+            fa = data.get("fetched_at")
+            fetched = str(fa).strip() if fa else None
+            return (list(raw), fetched or None)
         except Exception:
             continue
-    return []
+    return ([], None)
 
 
 def escape_attr(val: str) -> str:
@@ -278,8 +281,18 @@ def main() -> int:
         oth_items,
     )
 
-    deals = load_deals()
+    deals, deals_fetched_iso = load_deals_with_meta()
     deals_body = render_deals_rows(deals)
+    deals_asof_line = (
+        format_header_jst(deals_fetched_iso)
+        if deals_fetched_iso
+        else (gen_line or "—")
+    )
+    deals_asof_caption = (
+        "各社公式ページを自動取得した時刻（JST）"
+        if deals_fetched_iso
+        else "ビルド時刻に準じます（deals_fetcher 未実行または deals.json のみ）"
+    )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     if not DEALS_OUT.is_file() and DEALS_SRC.is_file():
@@ -300,6 +313,7 @@ def main() -> int:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="max-age=0, must-revalidate" />
   <meta http-equiv="refresh" content="300" />
   <title>AVIATION NEWS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -720,6 +734,11 @@ def main() -> int:
     .deal-badge--off {{ background: var(--deal-off-bg); color: var(--deal-off-fg); }}
     .deal-sale--muted {{ color: var(--color-muted); }}
     .deal-empty {{ text-align: center; color: var(--color-muted); }}
+    .deals-meta {{
+      margin: 0.5rem 0 0;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }}
     .muted {{ color: var(--color-muted); }}
     footer {{
       margin-top: 2rem;
@@ -777,6 +796,7 @@ def main() -> int:
             {deals_body}
           </tbody>
         </table>
+        <p class="deals-meta muted" aria-live="polite">お得情報の反映: <span class="mono">{html.escape(deals_asof_line)}</span> — {html.escape(deals_asof_caption)}</p>
       </section>
     </main>
     <footer>
