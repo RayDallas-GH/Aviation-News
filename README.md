@@ -56,6 +56,19 @@ python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && py
 2. `industry_fetcher.py` → `public/industry_news.json`（お得情報の**直下**に表示するメーカー3カラム用。**`renderer.py` より前**に必須）
 3. `deals_fetcher.py` → `public/deals.json`
 4. `renderer.py` → `public/index.html`
+5. `notify_email.py`（任意）→ 前回ビルド時のスナップショット（`notify_state.json`、Actions の cache）と `items.json` / `industry_news.json` のリンクを比較し、**新規 URL があるときだけ**メール送信
+
+## 新着メール通知（任意・テスト向け）
+
+GitHub Actions のシークレットを設定すると、**自分宛**に「RSS 由来の新着記事」だけをテキストメールで送れます。
+
+- **初回実行**: ベースラインのリンク集合を保存し、**メールは送りません**（2回目以降から差分通知）。
+- **送信方法**: **Resend**（`RESEND_API_KEY`）または **SMTP**（`SMTP_HOST` など）。どちらも未設定ならスナップショットだけ更新し、送信はスキップします。
+- **推奨シークレット（Resend）**: `RESEND_API_KEY`、`NOTIFY_EMAIL_TO`（受信）、`NOTIFY_EMAIL_FROM`（送信元。テストは Resend の `onboarding@resend.dev` などドキュメントに従う）。
+- **SMTP の例**: `SMTP_HOST`、`SMTP_PORT`（既定 587）、`SMTP_USER`、`SMTP_PASSWORD`、`NOTIFY_EMAIL_FROM`、`NOTIFY_EMAIL_TO`。
+- **無効化**: リポジトリシークレット `NOTIFY_EMAIL_DISABLED=true`、またはワークフローから `notify_email.py` の行を外す。
+
+ローカルで試すと `notify_state.json` が作られるので、**`.gitignore` に含め済み**です（コミット不要）。
 
 ## `deals_sources.yaml`（自動）
 

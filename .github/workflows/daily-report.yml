@@ -12,6 +12,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: github-pages
@@ -23,6 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore RSS notify snapshot
+        id: cache-notify
+        uses: actions/cache/restore@v4
+        with:
+          path: notify_state.json
+          key: notify-rss-snapshot-v1
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -30,11 +38,25 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # 航空会社ニュース → メーカー/eVTOL（industry_news.json）→ お得情報 → HTML
-      - name: Fetch and render
+      # 航空会社ニュース → メーカー/eVTOL → お得情報 → HTML → 新着メール（任意）
+      - name: Fetch, render, notify
         env:
           OUT_DIR: public
-        run: python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && python renderer.py
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
+          NOTIFY_EMAIL_FROM: ${{ secrets.NOTIFY_EMAIL_FROM }}
+        run: |
+          set -e
+          python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && python renderer.py
+          python notify_email.py || echo "::warning::notify_email failed (see log)"
+
+      - name: Save RSS notify snapshot
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: notify_state.json
+          key: notify-rss-snapshot-v1
 
       - uses: actions/upload-pages-artifact@v3
         with:
