@@ -62,6 +62,13 @@ python fetcher.py && python industry_fetcher.py && python deals_fetcher.py && py
 
 GitHub Actions のシークレットを設定すると、**自分宛**に「RSS 由来の新着記事」だけをテキストメールで送れます。
 
+### API キー・秘密情報の取り扱い
+
+- **リポジトリに API キーを書かない**（`feeds.yaml` やワークフローへの直書きは禁止）。
+- **GitHub**: `Settings → Secrets and variables → Actions` にだけ保存し、ワークフローは `secrets.*` で参照。
+- **ローカル**: リポジトリ直下に **`.env`** を置く（**`.gitignore` で除外済み**）。雛形は **[`.env.example`](.env.example)** をコピーして `.env` にリネームし、値だけ記入。`notify_email.py` は起動時に `.env` を読みます（**既にシェルや CI で設定されている変数は上書きしません**）。
+- 漏えいしたキーは **Resend 側でローテーション（無効化・再発行）** を検討してください。
+
 - **初回実行**: ベースラインのリンク集合を保存し、**メールは送りません**（2回目以降から差分通知）。
 - **送信方法**: **Resend**（`RESEND_API_KEY`）または **SMTP**（`SMTP_HOST` など）。どちらも未設定ならスナップショットだけ更新し、送信はスキップします。
 - **推奨シークレット（Resend）**: `RESEND_API_KEY`、`NOTIFY_EMAIL_TO`（受信）、`NOTIFY_EMAIL_FROM`（送信元。テストは Resend の `onboarding@resend.dev` などドキュメントに従う）。

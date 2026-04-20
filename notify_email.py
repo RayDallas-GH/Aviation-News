@@ -17,6 +17,26 @@ from typing import Any
 STATE_NAME = "notify_state.json"
 
 
+def load_dotenv_file(path: Path) -> None:
+    """リポジトリルートの .env を読み、未設定の環境変数だけ埋める（値はログに出さない）。"""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key = key.strip()
+        if not key or key in os.environ:
+            continue
+        val = val.strip()
+        if len(val) >= 2 and val[0] == val[-1] and val[0] in ('"', "'"):
+            val = val[1:-1]
+        os.environ[key] = val
+
+
 def _read_json(path: Path) -> Any:
     if not path.is_file():
         return None
@@ -107,6 +127,9 @@ def send_smtp(
 
 
 def main() -> int:
+    repo_root = Path(__file__).resolve().parent
+    load_dotenv_file(repo_root / ".env")
+
     if os.environ.get("NOTIFY_EMAIL_DISABLED", "").strip().lower() in (
         "1",
         "true",
