@@ -5,7 +5,7 @@ feeds:
     name: Aviation Wire
     url: https://www.aviationwire.jp/feed/
 
-# いずれかのグループにマッチしたら掲載。ダッシュボードは JAL / ANA / 独立系・LCC の3カラム。
+# いずれかのグループにマッチしたら掲載。Airline news は国内3列（JAL / ANA / 独立系）＋海外（intl_air）を縦に並べる。
 keyword_groups:
   jal:
     - JAL
@@ -49,6 +49,79 @@ keyword_groups:
     - トキエア
     - TOKI AIR
     - Toki Air
+  # 海外主要航空会社（英名・和名）。industry_feeds.yaml の exclude と揃えること。
+  intl_air:
+    - Qantas
+    - カンタス
+    - Singapore Airlines
+    - シンガポール航空
+    - Lufthansa
+    - ルフトハンザ
+    - Emirates
+    - エミレーツ
+    - Qatar Airways
+    - カタール航空
+    - United Airlines
+    - ユナイテッド航空
+    - American Airlines
+    - アメリカン航空
+    - Delta Air Lines
+    - デルタ航空
+    - Delta Air
+    - British Airways
+    - ブリティッシュ・エアウェイズ
+    - Air France
+    - エールフランス
+    - KLM
+    - KLMオランダ航空
+    - Turkish Airlines
+    - トルコ航空
+    - Cathay Pacific
+    - キャセイパシフィック
+    - Korean Air
+    - 大韓航空
+    - Asiana Airlines
+    - アシアナ航空
+    - EVA Air
+    - エバー航空
+    - Air Canada
+    - エア・カナダ
+    - Swiss International Air Lines
+    - SWISS
+    - Finnair
+    - フィンエアー
+    - SAS
+    - Norwegian
+    - Air India
+    - エア・インディア
+    - Virgin Atlantic
+    - ヴァージン・アトランティック
+    - Etihad Airways
+    - エティハド航空
+    - LATAM
+    - China Airlines
+    - チャイナエアライン
+    - Air China
+    - 中国国際航空
+    - easyJet
+    - Ryanair
+    - JetBlue
+    - Alaska Airlines
+    - Southwest Airlines
+    - WestJet
+    - Hawaiian Airlines
+    - ハワイアン航空
+    - Xiamen Airlines
+    - 厦門航空
+    - Hainan Airlines
+    - 海南航空
+    - Austrian Airlines
+    - オーストリア航空
+    - Brussels Airlines
+    - TAP Air Portugal
+    - Aer Lingus
+    - Icelandair
+    - Copa Airlines
 
 # タイトル・要約にマッチしたら Item.categories に追加（複数可）。UI のカテゴリフィルターとバッジに対応。
 category_keywords:

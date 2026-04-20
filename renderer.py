@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""items.json から閲覧用 index.html を生成する。AVIATION NEWS（3カラム＋お得情報＋メーカー・AAM）。"""
+"""items.json から閲覧用 index.html を生成する。AVIATION NEWS（Airline news 国内3＋海外、お得情報、メーカー・AAM）。"""
 
 from __future__ import annotations
 
@@ -274,14 +274,16 @@ def badge_category(cat: str) -> str:
 
 def company_badge_html(column: str, it: dict) -> str:
     """列に応じた社名バッジ。旧 items.json の airline_badge は oth のみフォールバック。"""
-    col = column if column in ("jal", "ana", "oth") else "oth"
+    valid = ("jal", "ana", "oth", "intl_air")
+    col = column if column in valid else "oth"
     key = f"badge_{col}"
     txt = it.get(key) or ""
     if not txt and col == "oth":
         txt = it.get("airline_badge") or ""
     if not txt:
         return ""
-    return f'<span class="badge badge--company-{col}">{html.escape(str(txt))}</span>'
+    css = col.replace("_", "-")
+    return f'<span class="badge badge--company-{css}">{html.escape(str(txt))}</span>'
 
 
 def render_news_row(it: dict, *, column: str) -> str:
@@ -331,13 +333,15 @@ def render_column(
         body = "\n".join(render_news_row(it, column=col_id) for it in items)
     else:
         body = '<p class="col-empty">該当なし</p>'
+    sub_html = ""
+    if subtitle.strip():
+        sub_html = f'  <p class="col-sub mono">{html.escape(subtitle)}</p>\n'
     return f"""<section class="col {accent_class}" aria-labelledby="h-{col_id}">
   <header class="col-banner">
     <h2 id="h-{col_id}" class="col-title">{title}</h2>
     {count_html}
   </header>
-  <p class="col-sub mono">{html.escape(subtitle)}</p>
-  <div class="col-body">{body}</div>
+{sub_html}  <div class="col-body">{body}</div>
 </section>"""
 
 
@@ -412,6 +416,9 @@ def main() -> int:
     ana_items = sort_for_column(items_for_group(items, "ana"))
     oth_items = sort_for_column(items_for_group(items, "oth"))
 
+    intl_n = count_with_group(items, "intl_air")
+    intl_items = sort_for_column(items_for_group(items, "intl_air"))
+
     col_jal = render_column(
         "jal",
         "JALグループ",
@@ -432,6 +439,13 @@ def main() -> int:
         "スカイマーク / FDA / IBEX / スプリングジャパン / 天草 / ORC / トキエア",
         "col-accent-oth",
         oth_items,
+    )
+    col_intl = render_column(
+        "intl_air",
+        "海外エアライン",
+        "",
+        "col-accent-intl-air",
+        intl_items,
     )
 
     deals, deals_fetched_iso = load_deals_with_meta()
@@ -487,7 +501,6 @@ def main() -> int:
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Cache-Control" content="max-age=0, must-revalidate" />
-  <meta http-equiv="refresh" content="300" />
   <title>AVIATION NEWS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -511,6 +524,9 @@ def main() -> int:
       --oth-accent: #c47a12;
       --oth-bg: #fdf6ea;
       --oth-text: #5c3d0c;
+      --intl-air-accent: #1f6f7a;
+      --intl-air-bg: #e6f5f7;
+      --intl-air-text: #0d3d44;
       --badge-breaking-bg: #E24B4A;
       --badge-breaking-fg: #ffffff;
       --badge-route-bg: #E6F1FB;
@@ -548,6 +564,8 @@ def main() -> int:
         --ana-text: #b8daf5;
         --oth-bg: #2a2318;
         --oth-text: #edd9b8;
+        --intl-air-bg: #142a2e;
+        --intl-air-text: #b8e8ef;
         --badge-route-bg: #153048;
         --badge-route-fg: #b8d4f0;
         --badge-finance-bg: #1a2e22;
@@ -663,6 +681,7 @@ def main() -> int:
     .stat-jal {{ color: var(--jal-accent); }}
     .stat-ana {{ color: var(--ana-accent); }}
     .stat-oth {{ color: var(--oth-accent); }}
+    .stat-intl-air {{ color: var(--intl-air-accent); }}
     .header-filter {{
       margin-top: 0.55rem;
       display: flex;
@@ -703,6 +722,22 @@ def main() -> int:
       font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
       color: var(--link-accent);
     }}
+    .air-news-stack {{
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }}
+    .subsection-label {{
+      font-family: var(--font-mono);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: var(--color-muted);
+      margin: 0.65rem 0 0.3rem 0;
+    }}
+    .air-news-stack > .subsection-label:first-child {{
+      margin-top: 0;
+    }}
     .grid-news {{
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -711,6 +746,13 @@ def main() -> int:
     }}
     @media (max-width: 900px) {{
       .grid-news {{ grid-template-columns: 1fr; }}
+    }}
+    /* 海外エアラインは JAL+ANA と同じ幅（3列グリッドで2列分） */
+    .grid-news--intl > .col {{
+      grid-column: span 2;
+    }}
+    @media (max-width: 900px) {{
+      .grid-news--intl > .col {{ grid-column: auto; }}
     }}
     .col {{
       background: var(--color-surface);
@@ -728,6 +770,7 @@ def main() -> int:
     .col-accent-jal {{ border-top: 2px solid var(--jal-accent); }}
     .col-accent-ana {{ border-top: 2px solid var(--ana-accent); }}
     .col-accent-oth {{ border-top: 2px solid var(--oth-accent); }}
+    .col-accent-intl-air {{ border-top: 2px solid var(--intl-air-accent); }}
     .col-banner {{
       display: flex;
       align-items: baseline;
@@ -739,6 +782,7 @@ def main() -> int:
     .col-accent-jal .col-banner {{ background: var(--jal-bg); }}
     .col-accent-ana .col-banner {{ background: var(--ana-bg); }}
     .col-accent-oth .col-banner {{ background: var(--oth-bg); }}
+    .col-accent-intl-air .col-banner {{ background: var(--intl-air-bg); }}
     .col-title {{
       margin: 0;
       font-size: 1.125rem;
@@ -747,6 +791,7 @@ def main() -> int:
     .col-accent-jal .col-title {{ color: var(--jal-text); }}
     .col-accent-ana .col-title {{ color: var(--ana-text); }}
     .col-accent-oth .col-title {{ color: var(--oth-text); }}
+    .col-accent-intl-air .col-title {{ color: var(--intl-air-text); }}
     .col-count {{ font-size: 0.875rem; color: var(--color-muted); }}
     .col-sub {{
       margin: 0;
@@ -809,6 +854,10 @@ def main() -> int:
     .badge--company-oth {{
       background: var(--badge-airline-bg);
       color: var(--badge-airline-fg);
+    }}
+    .badge--company-intl-air {{
+      background: var(--intl-air-bg);
+      color: var(--intl-air-text);
     }}
     .news-row__time {{
       flex: 0 0 auto;
@@ -954,6 +1003,7 @@ def main() -> int:
     @media (prefers-color-scheme: dark) {{
       .col-accent-jp .col-banner {{ background: rgba(46, 125, 50, 0.18); }}
       .col-accent-jp .col-title {{ color: #c8e6c9; }}
+      .col-accent-intl-air .col-banner {{ background: rgba(31, 111, 122, 0.22); }}
     }}
     .industry-col-body {{ padding-bottom: 0.5rem; }}
     .industry-row {{
@@ -1040,13 +1090,14 @@ def main() -> int:
     <header class="site-header">
       <h1 class="brand"><span class="brand-avi">AVIATION</span><span class="brand-news"> NEWS</span></h1>
       <div class="header-meta">
-        <span>最終更新 {html.escape(gen_line)} | 自動更新 5分</span>
+        <span>最終更新 {html.escape(gen_line)}</span>
       </div>
       <div class="header-stats" aria-label="記事数サマリー">
         <span class="stat stat-total">総記事 <strong>{total}</strong></span>
         <span class="stat stat-jal">JAL関連 <strong>{jal_n}</strong></span>
         <span class="stat stat-ana">ANA関連 <strong>{ana_n}</strong></span>
         <span class="stat stat-oth">独立系・LCC <strong>{oth_n}</strong></span>
+        <span class="stat stat-intl-air">海外エアライン <strong>{intl_n}</strong></span>
       </div>
       <div class="header-filter">
         <label for="cat-filter">カテゴリ</label>
@@ -1062,11 +1113,25 @@ def main() -> int:
     <main>
       {empty_main}
       <p class="section-label">Airline news</p>
-      <div class="grid-news" role="region" aria-label="エアラインニュース三カラム">
-        {col_jal}
-        {col_ana}
-        {col_oth}
+      <div class="air-news-stack">
+        <p class="subsection-label" id="h-air-domestic">国内エアライン</p>
+        <div class="grid-news" role="region" aria-labelledby="h-air-domestic">
+          {col_jal}
+          {col_ana}
+          {col_oth}
+        </div>
+        <p class="subsection-label" id="h-air-intl">海外エアライン</p>
+        <div class="grid-news grid-news--intl" role="region" aria-labelledby="h-air-intl">
+          {col_intl}
+        </div>
       </div>
+      <section class="industry-wrap" aria-labelledby="h-industry">
+        <p class="section-label" id="h-industry">メーカー・モビリティ</p>
+        {industry_meta}
+        <div class="grid-industry" role="region" aria-label="メーカーおよび空飛ぶクルマ関連ニュース">
+          {industry_cols}
+        </div>
+      </section>
       <section class="deals-wrap" aria-labelledby="h-deals">
         <p class="section-label" id="h-deals">那覇発着 {deals_heading_mark} お得情報</p>
         <table class="deals-table">
@@ -1083,13 +1148,6 @@ def main() -> int:
           </tbody>
         </table>
         <p class="deals-meta muted" aria-live="polite">お得情報の反映: <span class="mono">{html.escape(deals_asof_line)}</span> — {html.escape(deals_asof_caption)}</p>
-      </section>
-      <section class="industry-wrap" aria-labelledby="h-industry">
-        <p class="section-label" id="h-industry">メーカー・モビリティ</p>
-        {industry_meta}
-        <div class="grid-industry" role="region" aria-label="メーカーおよび空飛ぶクルマ関連ニュース">
-          {industry_cols}
-        </div>
       </section>
     </main>
     <footer>

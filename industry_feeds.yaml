@@ -11,11 +11,79 @@ feeds:
 # 先に評価するトラックほど優先（重複時は先勝ち）
 match_order: [aam, intl_oem, jp_oem]
 
-# 記事全体に当たったら除外（エアライン運航・路線ニュースなどメーカー列に不適切なもの）
+# 記事全体に当たったら除外（エアライン運航・路線・feeds.yaml intl_air と揃えた外航名など。メーカー列には載せない）
 exclude:
   - デルタ航空
   - Delta Air Lines
   - Delta Air
+  - Qantas
+  - カンタス
+  - Singapore Airlines
+  - シンガポール航空
+  - Lufthansa
+  - ルフトハンザ
+  - Emirates
+  - エミレーツ
+  - Qatar Airways
+  - カタール航空
+  - United Airlines
+  - ユナイテッド航空
+  - American Airlines
+  - アメリカン航空
+  - British Airways
+  - ブリティッシュ・エアウェイズ
+  - Air France
+  - エールフランス
+  - KLM
+  - KLMオランダ航空
+  - Turkish Airlines
+  - トルコ航空
+  - Cathay Pacific
+  - キャセイパシフィック
+  - Korean Air
+  - 大韓航空
+  - Asiana Airlines
+  - アシアナ航空
+  - EVA Air
+  - エバー航空
+  - Air Canada
+  - エア・カナダ
+  - Swiss International Air Lines
+  - SWISS
+  - Finnair
+  - フィンエアー
+  - SAS
+  - Norwegian
+  - Air India
+  - エア・インディア
+  - Virgin Atlantic
+  - ヴァージン・アトランティック
+  - Etihad Airways
+  - エティハド航空
+  - LATAM
+  - China Airlines
+  - チャイナエアライン
+  - Air China
+  - 中国国際航空
+  - easyJet
+  - Ryanair
+  - JetBlue
+  - Alaska Airlines
+  - Southwest Airlines
+  - WestJet
+  - Hawaiian Airlines
+  - ハワイアン航空
+  - Xiamen Airlines
+  - 厦門航空
+  - Hainan Airlines
+  - 海南航空
+  - Austrian Airlines
+  - オーストリア航空
+  - Brussels Airlines
+  - TAP Air Portugal
+  - Aer Lingus
+  - Icelandair
+  - Copa Airlines
 
 tracks:
   jp_oem:

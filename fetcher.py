@@ -28,12 +28,13 @@ class Item:
     summary: str
     source_id: str
     source_name: str
-    groups: list[str]  # "jal" / "ana" / "oth"
+    groups: list[str]  # "jal" / "ana" / "oth" / "intl_air"
     categories: list[str]  # route / finance / fleet / intl / general
     breaking: bool
     badge_jal: str  # タイトルに最初に当たった jal キーワード（該当列のみ表示）
     badge_ana: str
     badge_oth: str
+    badge_intl_air: str
 
 
 def load_config() -> dict[str, Any]:
@@ -217,6 +218,7 @@ def fetch_feed(
         jal_kws = keyword_groups.get("jal") or []
         ana_kws = keyword_groups.get("ana") or []
         oth_kws = keyword_groups.get("oth") or []
+        intl_kws = keyword_groups.get("intl_air") or []
         bj = (
             first_group_keyword_for_badge(title_clean, summary_clean, jal_kws)
             if "jal" in groups
@@ -230,6 +232,11 @@ def fetch_feed(
         bo = (
             first_group_keyword_for_badge(title_clean, summary_clean, oth_kws)
             if "oth" in groups
+            else ""
+        )
+        bi = (
+            first_group_keyword_for_badge(title_clean, summary_clean, intl_kws)
+            if "intl_air" in groups
             else ""
         )
         out.append(
@@ -246,6 +253,7 @@ def fetch_feed(
                 badge_jal=bj,
                 badge_ana=ba,
                 badge_oth=bo,
+                badge_intl_air=bi,
             )
         )
     return out
