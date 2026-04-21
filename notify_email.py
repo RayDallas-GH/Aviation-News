@@ -91,12 +91,14 @@ def send_resend(api_key: str, from_addr: str, to_addr: str, subject: str, body: 
         },
         ensure_ascii=False,
     ).encode("utf-8")
+    # Cloudflare 等が Python-urllib の既定 User-Agent を弾き 403 / error code 1010 になることがあるため明示する
     req = urllib.request.Request(
         "https://api.resend.com/emails",
         data=payload,
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            "User-Agent": "Aviation-News-notify_email/1.0",
         },
         method="POST",
     )
