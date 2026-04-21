@@ -77,6 +77,30 @@ GitHub Actions のシークレットを設定すると、**自分宛**に「RSS 
 
 ローカルで試すと `notify_state.json` が作られるので、**`.gitignore` に含め済み**です（コミット不要）。
 
+### はじめての方へ（用語の整理）
+
+このあとの説明で出てくる言葉の意味です（入社直後でも追いやすいように）。
+
+- **RSS**: ニュースサイトが配信する「新着記事の一覧データ」です。プログラムがこれを読み、タイトル・**URL**（記事1本を指すインターネット上の住所）・公開日時を取ります。
+- **ビルド**: 決まった手順でプログラムを動かし、そのときのデータからページ（HTML）を作り直す作業です。ここでは **GitHub Actions**（GitHub がクラウド上で自動実行してくれる仕組み）が、1日2回などの予定でビルドします。
+- **スナップショット（`notify_state.json`）**: 「前回までにシステムが把握していた記事 URL の一覧」を保存したメモです。次のビルドで「一覧に無かった新しい URL があるか」を見て、メールに載せるか決めます。
+- **シークレット（Secrets）**: API キーやメールの受信先など、ソースコードに直接書けない情報を GitHub に安全に預ける機能です。**設定されていないとメール送信がスキップ**されます。
+- **Resend / SMTP**: メールを実際に送るためのサービス・仕組みです。どちらかを設定しないと、プログラムは「送る先が無い」と判断します。
+
+### メール未着のとき（ヘッダー「最終更新」との違い）
+
+- **ヘッダーの「最終更新」**は [`fetcher.py`](fetcher.py) が `items.json` に書く **`generated_at`**（そのビルドで RSS 取得が最後まで成功した時刻の JST 表示）です。新着件数に関係なく、**ビルドが成功するたびに進みます**。
+- **各記事カードの時刻**（「07:00」「昨日」など）は RSS の **公開日時**であり、メールの「新着」判定とは別です。
+- **メール**は [`notify_email.py`](notify_email.py) が **`items.json` と `industry_news.json` の URL** を、Actions の cache が保持する **`notify_state.json`** と比較し、**前回に無かった URL があるときだけ**送ります。ダッシュボードに記事が出ていても、**その URL がすでにスナップショットに含まれていれば**メールは出ません（前日夜のビルドや手動 Re-run で先に取り込まれた場合など）。
+
+**届かないときの確認**
+
+1. **GitHub**: リポジトリの **Actions → Daily aviation report** を開き、該当実行の **Fetch, render, notify** ステップのログで次を探します。  
+   - `notify_email: no new links` → 新規 URL なし（仕様どおり送信なし）  
+   - `notify_email: sent via Resend` または SMTP 成功メッセージ → 送信済み（受信トレイ・迷惑メール・Resend ダッシュボードを確認）  
+   - `NOTIFY_EMAIL_TO unset; skipping send` または API キー未設定メッセージ → **Settings → Secrets and variables → Actions** に `NOTIFY_EMAIL_TO`（および Resend なら `RESEND_API_KEY` / `NOTIFY_EMAIL_FROM`）が設定されているか確認してください。
+2. **初回実行**はベースライン保存のみでメールは送りません（2 回目以降から差分通知）。
+
 ## `deals_sources.yaml`（自動）
 
 - 各行: `airline`, `dot`, `airline_url`（社名リンク）, **`campaign_url`**（セール情報を読みに行く URL）, **`sale_abbr`**（セール列リンク表記「◯◯セール」用。例: `JAL`, `ソラシド`, `Peach`, `JJP`）。

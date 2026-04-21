@@ -11,10 +11,20 @@ import sys
 import urllib.error
 import urllib.request
 from email.message import EmailMessage
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 STATE_NAME = "notify_state.json"
+
+# fetcher の groups とダッシュボード列名に合わせる（先頭に含まれるグループを採用）
+_AIRLINE_GROUP_ORDER = ("jal", "ana", "oth", "intl_air")
+_AIRLINE_SECTION_JA: dict[str, str] = {
+    "jal": "JALグループ",
+    "ana": "ANAグループ",
+    "oth": "独立系・LCC",
+    "intl_air": "海外エアライン",
+}
 
 
 def load_dotenv_file(path: Path) -> None:
@@ -46,10 +56,37 @@ def _read_json(path: Path) -> Any:
         return None
 
 
-def collect_article_links_and_titles(out_dir: Path) -> tuple[list[str], dict[str, str]]:
-    """items.json と industry_news.json から (リンク順序保持リスト, url->title)。"""
+def _section_for_airline_item(groups: Any) -> str:
+    if not isinstance(groups, list):
+        groups = []
+    for g in _AIRLINE_GROUP_ORDER:
+        if g in groups:
+            return _AIRLINE_SECTION_JA[g]
+    return "Airline news（その他）"
+
+
+def _industry_track_order(out_dir: Path) -> list[str]:
+    """industry_news.json のトラック表示順（label_ja）。"""
+    labels: list[str] = []
+    raw = _read_json(out_dir / "industry_news.json")
+    if not isinstance(raw, dict):
+        return labels
+    for tr in raw.get("tracks") or []:
+        if not isinstance(tr, dict):
+            continue
+        lab = str(tr.get("label_ja") or tr.get("id") or "").strip()
+        if lab and lab not in labels:
+            labels.append(lab)
+    return labels
+
+
+def collect_article_links_titles_sections(
+    out_dir: Path,
+) -> tuple[list[str], dict[str, str], dict[str, str]]:
+    """items.json と industry_news.json から (順序付きリンク, url->title, url->見出し)。"""
     ordered: list[str] = []
     titles: dict[str, str] = {}
+    sections: dict[str, str] = {}
 
     items_path = out_dir / "items.json"
     raw = _read_json(items_path)
@@ -61,6 +98,7 @@ def collect_article_links_and_titles(out_dir: Path) -> tuple[list[str], dict[str
             if not link or link in titles:
                 continue
             titles[link] = str(it.get("title") or "(無題)")
+            sections[link] = _section_for_airline_item(it.get("groups"))
             ordered.append(link)
 
     ind_path = out_dir / "industry_news.json"
@@ -69,6 +107,7 @@ def collect_article_links_and_titles(out_dir: Path) -> tuple[list[str], dict[str
         for tr in raw.get("tracks") or []:
             if not isinstance(tr, dict):
                 continue
+            sec = str(tr.get("label_ja") or tr.get("id") or "メーカー・モビリティ").strip()
             for it in tr.get("items") or []:
                 if not isinstance(it, dict):
                     continue
@@ -76,9 +115,62 @@ def collect_article_links_and_titles(out_dir: Path) -> tuple[list[str], dict[str
                 if not link or link in titles:
                     continue
                 titles[link] = str(it.get("title") or "(無題)")
+                sections[link] = sec
                 ordered.append(link)
 
-    return ordered, titles
+    return ordered, titles, sections
+
+
+def _section_emit_order(out_dir: Path, present: set[str]) -> list[str]:
+    """メール内の見出しの並び（ダッシュボードに近い順）。"""
+    out: list[str] = []
+    for _k, lab in (
+        ("jal", _AIRLINE_SECTION_JA["jal"]),
+        ("ana", _AIRLINE_SECTION_JA["ana"]),
+        ("oth", _AIRLINE_SECTION_JA["oth"]),
+        ("intl_air", _AIRLINE_SECTION_JA["intl_air"]),
+    ):
+        if lab in present and lab not in out:
+            out.append(lab)
+    for lab in _industry_track_order(out_dir):
+        if lab in present and lab not in out:
+            out.append(lab)
+    for lab in sorted(present):
+        if lab not in out:
+            out.append(lab)
+    return out
+
+
+def build_email_body(
+    new_links: list[str],
+    title_by_link: dict[str, str],
+    section_by_link: dict[str, str],
+    out_dir: Path,
+) -> str:
+    """見出し付きプレーンテキスト本文。"""
+    header = f"新着 {len(new_links)} 件（Aviation-News / RSS 由来）"
+    by_section: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    for url in new_links:
+        title = title_by_link.get(url, url)
+        sec = section_by_link.get(url, "その他")
+        by_section[sec].append((title, url))
+
+    present = set(by_section.keys())
+    order = _section_emit_order(out_dir, present)
+    lines: list[str] = [header, ""]
+    for i, sec in enumerate(order):
+        pairs = by_section.get(sec) or []
+        if not pairs:
+            continue
+        if i > 0 or lines[-1] != "":
+            lines.append("")
+        lines.append(f"【{sec}】")
+        lines.append("")
+        for title, url in pairs:
+            lines.append(title)
+            lines.append(url)
+            lines.append("")
+    return "\n".join(lines).strip() + "\n"
 
 
 def send_resend(api_key: str, from_addr: str, to_addr: str, subject: str, body: str) -> None:
@@ -143,7 +235,9 @@ def main() -> int:
     out_dir = Path(os.environ.get("OUT_DIR", "public"))
     state_path = Path(os.environ.get("NOTIFY_STATE_PATH", STATE_NAME))
 
-    ordered, title_by_link = collect_article_links_and_titles(out_dir)
+    ordered, title_by_link, section_by_link = collect_article_links_titles_sections(
+        out_dir
+    )
     current_set = set(ordered)
 
     state = _read_json(state_path)
@@ -181,13 +275,7 @@ def main() -> int:
         )
         return 0
 
-    lines = [f"新着 {len(new_links)} 件（Aviation-News / RSS 由来）", ""]
-    for url in new_links:
-        lines.append(title_by_link.get(url, url))
-        lines.append(url)
-        lines.append("")
-
-    body = "\n".join(lines).strip() + "\n"
+    body = build_email_body(new_links, title_by_link, section_by_link, out_dir)
     subject = f"[Aviation-News] 新着 {len(new_links)} 件"
 
     resend_key = (os.environ.get("RESEND_API_KEY") or "").strip()
