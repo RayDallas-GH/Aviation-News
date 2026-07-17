@@ -5,8 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    # UTC 11:00 ≈ JST 20:00、UTC 23:00 ≈ JST 翌 08:00（お得情報も含め日2回ビルド）
-    - cron: "0 11,23 * * *"
+    # UTC 23:00 ≈ JST 翌 08:00（日1回ビルド）
+    - cron: "0 23 * * *"
 
 permissions:
   contents: read
