@@ -5,7 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    # UTC 18:00 = JST 3:00 起動（実際は2〜3.5時間遅れて動く）。メールは Resend の予約送信で JST 8:00 に届く
+    # UTC 18:00 = JST 3:00 起動（実際は2〜3.5時間遅れて動く）。メールは取得後すぐ送信（朝5〜7時ごろ着）
+    # ※ Resend の予約送信（scheduled_at）は全件 Failed になったため不使用（2026-10-17）
     - cron: "0 18 * * *"
 
 permissions:

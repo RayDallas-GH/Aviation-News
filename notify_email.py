@@ -12,13 +12,10 @@ import urllib.error
 import urllib.request
 from email.message import EmailMessage
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 STATE_NAME = "notify_state.json"
-JST = timezone(timedelta(hours=9))
-SEND_HOUR_JST = 8
 
 # fetcher の groups とダッシュボード列名に合わせる（先頭に含まれるグループを採用）
 _AIRLINE_GROUP_ORDER = ("jal", "ana", "oth", "intl_air")
@@ -176,26 +173,12 @@ def build_email_body(
     return "\n".join(lines).strip() + "\n"
 
 
-def scheduled_at_for(now: datetime) -> str | None:
-    """JST 8:00 前の実行なら当日8:00の予約送信時刻（ISO8601）を返す。過ぎていれば None（即時送信）。
-
-    GitHub Actions の schedule は数時間遅れて起動するのが常態化している（実測で2〜3.5時間）。
-    そのため早めに起動して取得だけ済ませ、配信時刻は Resend の予約送信で固定する。
-    """
-    local = now.astimezone(JST)
-    target = local.replace(hour=SEND_HOUR_JST, minute=0, second=0, microsecond=0)
-    if local >= target - timedelta(minutes=2):
-        return None
-    return target.isoformat()
-
-
 def send_resend(
     api_key: str,
     from_addr: str,
     to_addr: str,
     subject: str,
     body: str,
-    scheduled_at: str | None = None,
 ) -> None:
     data: dict[str, Any] = {
         "from": from_addr,
@@ -203,8 +186,6 @@ def send_resend(
         "subject": subject,
         "text": body,
     }
-    if scheduled_at:
-        data["scheduled_at"] = scheduled_at
     payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
     # Cloudflare 等が Python-urllib の既定 User-Agent を弾き 403 / error code 1010 になることがあるため明示する
     req = urllib.request.Request(
@@ -321,9 +302,8 @@ def main() -> int:
                     file=sys.stderr,
                 )
                 return 1
-            scheduled_at = scheduled_at_for(datetime.now(timezone.utc))
-            send_resend(resend_key, from_addr, to_addr, subject, body, scheduled_at)
-            print(f"notify_email: sent via Resend (scheduled_at={scheduled_at or 'now'})", file=sys.stderr)
+            send_resend(resend_key, from_addr, to_addr, subject, body)
+            print("notify_email: sent via Resend", file=sys.stderr)
         else:
             port = int(os.environ.get("SMTP_PORT") or "587")
             user = (os.environ.get("SMTP_USER") or "").strip()
