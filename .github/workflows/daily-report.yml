@@ -25,12 +25,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # actions/cache のキーは一度保存すると同じキーには二度と書き込めない（save は黙って失敗する）。
+      # 以前は固定キーだったため 2026-07-17 の状態から更新されず、同じ記事が毎回「新着」扱いになっていた。
+      # 保存キーに毎回ユニークな run_id を含め、復元は restore-keys のプレフィックス一致で最新を拾う。
+      # （プレフィックスを "-" なしにしているのは、移行初回に旧固定キーのキャッシュも拾うため）
       - name: Restore RSS notify snapshot
         id: cache-notify
         uses: actions/cache/restore@v4
         with:
           path: notify_state.json
-          key: notify-rss-snapshot-v1
+          key: notify-rss-snapshot-v1-${{ github.run_id }}
+          restore-keys: |
+            notify-rss-snapshot-v1
 
       - uses: actions/setup-python@v5
         with:
@@ -57,7 +63,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: notify_state.json
-          key: notify-rss-snapshot-v1
+          key: notify-rss-snapshot-v1-${{ github.run_id }}
 
       - uses: actions/upload-pages-artifact@v3
         with:
